@@ -30,6 +30,6 @@ public class ActionHistoryEntity {
     private StatusEnum status;
 
     @Column(name = "created_at",  columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false )
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
 }
