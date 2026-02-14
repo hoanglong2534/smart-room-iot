@@ -11,3 +11,12 @@ spring:
       ddl-auto: update
 server:
   port: 12345
+
+mqtt:
+  broker-url: tcp://localhost:9999
+  client-id: smart-room-backend
+  username: longpxh
+  password: longpxh@123
+  topic:
+    sensor: smartroom/collect-data
+    device-status: smartroom/status/device/+
