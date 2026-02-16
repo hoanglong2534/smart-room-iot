@@ -39,8 +39,8 @@ const Login = () => {
         <div className="flex h-screen w-screen font-sans overflow-hidden">
             <div className="flex-1 flex justify-center items-center p-10 bg-gradient-to-b from-bg-secondary to-bg-dark">
                 <div className="w-full max-w-[400px]">
-                    <div className="mb-10 text-left">
-                        <h2 className="text-[1.8rem] text-text-title mb-2.5 flex items-center gap-2.5 font-bold leading-none">
+                    <div className="mb-10 text-center">
+                        <h2 className="text-[1.8rem] text-text-title mb-2.5 flex items-center justify-center gap-2.5 font-bold leading-none">
                             <img src={greetingIcon} alt="Greeting Icon" className="w-8 h-8 object-contain" />
                             {greetingText}
                         </h2>
