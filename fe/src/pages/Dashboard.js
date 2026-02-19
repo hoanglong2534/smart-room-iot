@@ -15,6 +15,9 @@ import gifFanAnim from '../assets/gif-fan.gif';
 import gifLightAnim from '../assets/gif-light.gif';
 import gifHumidifierAnim from '../assets/gif-humidifier.gif';
 
+import StatCard from '../components/StatCard';
+import DeviceCard from '../components/DeviceCard';
+
 const Dashboard = () => {
     const navigate = useNavigate();
 
@@ -41,117 +44,83 @@ const Dashboard = () => {
                 <header className="py-2.5 mb-5">
                 </header>
 
-                <div className="flex-1 overflow-y-auto flex flex-col gap-[25px]">
+                <div className="flex-1 overflow-y-auto flex flex-col gap-[25px] p-4">
 
                     <div className="grid grid-cols-3 gap-[25px]">
-                        <div
-                            className={`bg-card-humidity rounded-[15px] p-[25px] flex flex-col justify-between cursor-pointer transition-all duration-300
-                                ${selectedDevice === 'humidifier' ? 'shadow-[0_20px_40px_rgba(0,0,0,0.1)] -translate-y-[10px] bg-white' : 'shadow-[0_4px_15px_rgba(0,0,0,0.02)] hover:-translate-y-[3px]'}`}
+                        <StatCard
+                            title="ĐỘ ẨM"
+                            icon={iconHumidity}
+                            value="85%"
+                            trendIcon={iconIncrease}
+                            trendText="20% so với hôm qua"
+                            isActive={selectedDevice === 'humidifier'}
                             onClick={() => setSelectedDevice('humidifier')}
-                        >
-                            <div className="flex justify-between items-center mb-[15px]">
-                                <span className="text-[#727681] font-bold text-[1.1rem] tracking-[1px]">ĐỘ ẨM</span>
-                                <img src={iconHumidity} alt="Humidity" className="w-[45px] h-[45px] object-contain" />
-                            </div>
-                            <div className="flex items-center gap-[15px]">
-                                <h1 className="text-[5.5rem] m-0 font-semibold text-text-humidity">85%</h1>
-                                <img src={iconIncrease} alt="Increase" className="w-[60px] h-[60px] object-contain" />
-                            </div>
-                            <p className="text-[#727681] text-[1rem] mt-[10px]">20% so với hôm qua</p>
-                        </div>
-
-                        <div
-                            className={`bg-card-light rounded-[15px] p-[25px] flex flex-col justify-between cursor-pointer transition-all duration-300
-                                ${selectedDevice === 'light' ? 'shadow-[0_20px_40px_rgba(0,0,0,0.1)] -translate-y-[10px] bg-white' : 'shadow-[0_4px_15px_rgba(0,0,0,0.02)] hover:-translate-y-[3px]'}`}
+                            bgClass="bg-card-humidity"
+                            textClass="text-text-humidity"
+                        />
+                        <StatCard
+                            title="ÁNH SÁNG"
+                            icon={iconLight}
+                            value="200lx"
+                            trendIcon={iconDecrease}
+                            trendText="33% so với hôm qua"
+                            isActive={selectedDevice === 'light'}
                             onClick={() => setSelectedDevice('light')}
-                        >
-                            <div className="flex justify-between items-center mb-[15px]">
-                                <span className="text-[#727681] font-bold text-[1.1rem] tracking-[1px]">ÁNH SÁNG</span>
-                                <img src={iconLight} alt="Light" className="w-[45px] h-[45px] object-contain" />
-                            </div>
-                            <div className="flex items-center gap-[15px]">
-                                <h1 className="text-[5.5rem] m-0 font-semibold text-text-light">200lx</h1>
-                                <img src={iconDecrease} alt="Decrease" className="w-[60px] h-[60px] object-contain" />
-                            </div>
-                            <p className="text-[#727681] text-[1rem] mt-[10px]">33% so với hôm qua</p>
-                        </div>
-
-                        <div
-                            className={`bg-card-temp rounded-[15px] p-[25px] flex flex-col justify-between cursor-pointer transition-all duration-300
-                                ${selectedDevice === 'fan' ? 'shadow-[0_20px_40px_rgba(0,0,0,0.1)] -translate-y-[10px] bg-white' : 'shadow-[0_4px_15px_rgba(0,0,0,0.02)] hover:-translate-y-[3px]'}`}
+                            bgClass="bg-card-light"
+                            textClass="text-text-light"
+                        />
+                        <StatCard
+                            title="NHIỆT ĐỘ"
+                            icon={iconTemp}
+                            value="15°C"
+                            trendIcon={iconDecrease}
+                            trendText="12% so với hôm qua"
+                            isActive={selectedDevice === 'fan'}
                             onClick={() => setSelectedDevice('fan')}
-                        >
-                            <div className="flex justify-between items-center mb-[15px]">
-                                <span className="text-[#727681] font-bold text-[1.1rem] tracking-[1px]">NHIỆT ĐỘ</span>
-                                <img src={iconTemp} alt="Temp" className="w-[45px] h-[45px] object-contain" />
-                            </div>
-                            <div className="flex items-center gap-[15px]">
-                                <h1 className="text-[5.5rem] m-0 font-semibold text-text-temp">15°C</h1>
-                                <img src={iconDecrease} alt="Decrease" className="w-[60px] h-[60px] object-contain" />
-                            </div>
-                            <p className="text-[#727681] text-[1rem] mt-[10px]">12% so với hôm qua</p>
-                        </div>
+                            bgClass="bg-card-temp"
+                            textClass="text-text-temp"
+                        />
                     </div>
 
-                    {/* Chart Section */}
+                    {/* Chart*/}
                     <div className="flex-1 bg-white rounded-[15px] p-[20px] shadow-[0_4px_15px_rgba(0,0,0,0.02)] border border-card-humidity min-h-[300px]">
                         <div className="h-full flex justify-center items-center bg-card-humidity text-text-humidity text-[1.2rem]">
                             <div className="">Chart Placeholder (Area Chart)</div>
                         </div>
                     </div>
 
-                    {/* Bottom Device Controls */}
+                    {/*  Controls */}
                     <div className="grid grid-cols-3 gap-[25px]">
-                        {/* Humidifier */}
-                        <div
-                            className={`p-[25px_30px] rounded-[15px] flex justify-between items-center cursor-pointer shadow-[0_4px_10px_rgba(0,0,0,0.05)] transition-transform duration-200 hover:-translate-y-[3px]
-                                ${devices.humidifier ? 'bg-card-humidity text-text-humidity' : 'bg-[#D9D9D9] text-[#727681]'}`}
+                        <DeviceCard
+                            name="MÁY HÚT ẨM"
+                            isOn={devices.humidifier}
+                            iconStatic={deviceHumidifierStatic}
+                            iconGif={gifHumidifierAnim}
                             onClick={() => toggleDevice('humidifier')}
-                        >
-                            <div className="block mb-[5px]">
-                                <span className={`text-[1rem] font-bold block mb-[5px] ${devices.humidifier ? 'text-[#00838F]' : ''}`}>MÁY HÚT ẨM</span>
-                                <h3 className="m-0 text-[1.4rem]">{devices.humidifier ? 'ĐANG BẬT' : 'ĐANG TẮT'}</h3>
-                            </div>
-                            <img
-                                src={devices.humidifier ? gifHumidifierAnim : deviceHumidifierStatic}
-                                alt="Humidifier"
-                                className="w-[70px] h-[70px] object-contain"
-                            />
-                        </div>
-
-                        {/* Light */}
-                        <div
-                            className={`p-[25px_30px] rounded-[15px] flex justify-between items-center cursor-pointer shadow-[0_4px_10px_rgba(0,0,0,0.05)] transition-transform duration-200 hover:-translate-y-[3px]
-                                ${devices.light ? 'bg-card-light text-text-light' : 'bg-[#D9D9D9] text-[#727681]'}`}
+                            activeBgClass="bg-card-humidity"
+                            activeTextClass="text-text-humidity"
+                            activeTitleColor="text-[#00838F]"
+                        />
+                        <DeviceCard
+                            name="ĐÈN"
+                            isOn={devices.light}
+                            iconStatic={deviceLightStatic}
+                            iconGif={gifLightAnim}
                             onClick={() => toggleDevice('light')}
-                        >
-                            <div className="block mb-[5px]">
-                                <span className={`text-[1rem] font-bold block mb-[5px] ${devices.light ? 'text-[#F9A825]' : ''}`}>ĐÈN</span>
-                                <h3 className="m-0 text-[1.4rem]">{devices.light ? 'ĐANG BẬT' : 'ĐANG TẮT'}</h3>
-                            </div>
-                            <img
-                                src={devices.light ? gifLightAnim : deviceLightStatic}
-                                alt="Light"
-                                className="w-[70px] h-[70px] object-contain"
-                            />
-                        </div>
-
-                        {/* Fan */}
-                        <div
-                            className={`p-[25px_30px] rounded-[15px] flex justify-between items-center cursor-pointer shadow-[0_4px_10px_rgba(0,0,0,0.05)] transition-transform duration-200 hover:-translate-y-[3px]
-                                ${devices.fan ? 'bg-card-temp text-text-temp' : 'bg-[#D9D9D9] text-[#727681]'}`}
+                            activeBgClass="bg-card-light"
+                            activeTextClass="text-text-light"
+                            activeTitleColor="text-[#F9A825]"
+                        />
+                        <DeviceCard
+                            name="QUẠT"
+                            isOn={devices.fan}
+                            iconStatic={deviceFanStatic}
+                            iconGif={gifFanAnim}
                             onClick={() => toggleDevice('fan')}
-                        >
-                            <div className="block mb-[5px]">
-                                <span className={`text-[1rem] font-bold block mb-[5px] ${devices.fan ? 'text-[#C2185B]' : ''}`}>QUẠT</span>
-                                <h3 className="m-0 text-[1.4rem]">{devices.fan ? 'ĐANG BẬT' : 'ĐANG TẮT'}</h3>
-                            </div>
-                            <img
-                                src={devices.fan ? gifFanAnim : deviceFanStatic}
-                                alt="Fan"
-                                className="w-[70px] h-[70px] object-contain"
-                            />
-                        </div>
+                            activeBgClass="bg-card-temp"
+                            activeTextClass="text-text-temp"
+                            activeTitleColor="text-[#C2185B]"
+                        />
                     </div>
                 </div>
             </main>
