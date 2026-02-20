@@ -15,24 +15,24 @@ const DashboardChart = ({ data, type = 'humidifier' }) => {
         switch (type) {
             case 'humidifier':
                 return {
-                    stroke: '#4DD0E1', // Cyan-like
-                    fillStart: '#4DD0E1',
-                    fillEnd: '#E0F7FA',
-                    point: '#4DD0E1'
+                    stroke: '#5BD4D4',
+                    fillStart: '#5BD4D4',
+                    fillEnd: '#E8F2F1',
+                    point: '#5BD4D4'
                 };
             case 'light':
                 return {
-                    stroke: '#FDD835', // Yellow
-                    fillStart: '#FDD835',
-                    fillEnd: '#FFF9C4',
-                    point: '#FDD835'
+                    stroke: '#FFB300',
+                    fillStart: '#FFB300',
+                    fillEnd: '#FFF4D6',
+                    point: '#FFB300'
                 };
             case 'fan':
                 return {
-                    stroke: '#E91E63', // Pink/Red
-                    fillStart: '#E91E63',
-                    fillEnd: '#FCE4EC',
-                    point: '#E91E63'
+                    stroke: '#F44336',
+                    fillStart: '#F44336',
+                    fillEnd: '#FCE8E6',
+                    point: '#F44336'
                 };
             default:
                 return {
