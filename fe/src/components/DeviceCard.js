@@ -20,11 +20,13 @@ const DeviceCard = ({
                 <span className={`text-[1.4rem] text-center font-bold block ${isOn ? activeTitleColor : ''}`}>{name}</span>
                 <h3 className="m-0 text-[2.4rem] font-bold">{isOn ? 'ĐANG BẬT' : 'ĐANG TẮT'}</h3>
             </div>
-            <img
-                src={isOn ? iconGif : iconStatic}
-                alt={name}
-                className="px-0 w-[100px] h-[100px] object-contain"
-            />
+            <div className="flex justify-center items-center">
+                <img
+                    src={isOn ? iconGif : iconStatic}
+                    alt={name}
+                    className="w-[100px] h-[100px] object-contain"
+                />
+            </div>
         </div>
     );
 };
