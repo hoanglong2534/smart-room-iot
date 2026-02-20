@@ -1,4 +1,16 @@
+#include <WiFi.h>
+#include <PubSubClient.h>
 #include <DHT.h>
+
+// --- Cấu hình Wifi và MQTT ---
+const char* ssid = "MyWifi"
+const char* password = "iot@12345";
+const char* mqtt_server = "10.122.181.155";
+const int mqtt_port = 9999;
+const char* mqtt_user = "longpxh";
+const char* mqtt_pass = "longpxh@123";
+
+const char* topic_data = "smartroom/collect-data";
 
 #define DHTPIN 26
 #define DHTTYPE DHT11
@@ -14,30 +26,55 @@
 #define LIGHT_DARK    1500   
 
 DHT dht(DHTPIN, DHTTYPE);
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 unsigned long lastRead = 0;
 const unsigned long INTERVAL = 2000;
 
-void setup() {
-  Serial.begin(115200);
+void setup_wifi() {
+  delay(10);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
+}
 
+void reconnect() {
+  while (!client.connected()) {
+    String clientId = "ESP32Client-";
+    clientId += String(random(0xffff), HEX);
+    if (!client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+      delay(5000);
+    }
+  }
+}
+
+void setup() {
   pinMode(LED_RED, OUTPUT);
   pinMode(LED_BLUE, OUTPUT);
   pinMode(LED_ORANGE, OUTPUT);
 
   dht.begin();
+  setup_wifi();
+  client.setServer(mqtt_server, mqtt_port);
 }
 
 void loop() {
-  if (millis() - lastRead < INTERVAL) return;
-  lastRead = millis();
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastRead < INTERVAL) return;
+  lastRead = currentMillis;
 
   float temp = dht.readTemperature();
   float humi = dht.readHumidity();
   int lightValue = analogRead(LDR_PIN);
 
   if (isnan(temp) || isnan(humi)) {
-    Serial.println("❌ Lỗi đọc DHT11");
     return;
   }
 
@@ -64,4 +101,13 @@ void loop() {
   } else {
     digitalWrite(LED_ORANGE, LOW);
   }
+
+  // --- PUB MQTT ---
+  String payload = "{";
+  payload += "\"temperature\":"; payload += String(temp, 1); payload += ",";
+  payload += "\"humidity\":"; payload += String(humi, 1); payload += ",";
+  payload += "\"light\":"; payload += String(lightValue);
+  payload += "}";
+
+  client.publish(topic_data, payload.c_str());
 }
