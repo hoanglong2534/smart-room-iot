@@ -6,12 +6,12 @@ import iconFigma from '../assets/arcticons_figma.png';
 import iconGithub from '../assets/arcticons_github.png';
 import iconReport from '../assets/arcticons_pdfn-up.png';
 
-import iconStudent from '../assets/image 10.png'; 
-import iconClass from '../assets/image 3.png';    
-import iconFaculty from '../assets/image 11.png'; 
-import iconDob from '../assets/image 4.png';      
-import iconPhone from '../assets/image 12.png';   
-import iconEmail from '../assets/image 7.png';    
+import iconStudent from '../assets/image 10.png';
+import iconClass from '../assets/image 3.png';
+import iconFaculty from '../assets/image 11.png';
+import iconDob from '../assets/image 4.png';
+import iconPhone from '../assets/image 12.png';
+import iconEmail from '../assets/image 7.png';
 
 const Profile = () => {
     const user = {
@@ -63,14 +63,14 @@ const Profile = () => {
 
                 <div className="flex-1 overflow-y-auto">
                     <div className="bg-[#FAF7F2] rounded-[25px] p-[50px] shadow-[0_20px_40px_rgba(0,0,0,0.08)] mb-[40px] flex flex-col gap-[40px]">
-    
+
                         <div className="flex items-start gap-[40px]">
                             <div className="w-[180px] h-[180px] rounded-full border-[5px] border-white shadow-lg flex-shrink-0 mt-[10px] overflow-hidden">
                                 <img
                                     src={avatarImg}
                                     alt="Avatar"
                                     className="w-full h-full object-cover"
-                                    style={{ 
+                                    style={{
                                         transform: 'scale(1.3)',
                                         objectPosition: 'center 20%'
                                     }}
@@ -100,7 +100,7 @@ const Profile = () => {
                     {/* Actions Grid */}
                     <div className="grid grid-cols-4 gap-[30px]">
                         <ActionButton icon={iconReport} label="Báo cáo" />
-                        <ActionButton icon={iconApi} label="Tài liệu API" />
+                        <ActionButton icon={iconApi} label="Tài liệu API" href="http://localhost:12345/swagger-ui/index.html" target="_blank" rel="noopener noreferrer" />
                         <ActionButton icon={iconFigma} label="Figma" target="_blank" rel="noopener noreferrer" href="https://www.figma.com/design/FlcxqATRxNNkvZJhLW9iQ0/IoT---Smart-Room?node-id=0-1&t=azezdRRlXeaa6fxi-1" />
                         <ActionButton icon={iconGithub} label="Github" target="_blank" rel="noopener noreferrer" href="https://github.com/hoanglong2534/smart-room-iot" />
                     </div>
