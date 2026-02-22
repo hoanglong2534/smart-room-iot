@@ -78,7 +78,17 @@ const Sidebar = () => {
 
             <div className="mt-auto border-t border-[#EFEBE9] pt-5">
                 <div className={`flex items-center gap-3 whitespace-nowrap overflow-hidden ${isCollapsed ? 'justify-center' : ''}`}>
-                    <img src={avatarImg} alt="Avatar" className="w-[50px] h-[50px] rounded-full object-cover border-2 border-white shadow-sm" />
+                    <div className="w-[50px] h-[50px] rounded-full border-2 border-white shadow-sm overflow-hidden flex-shrink-0">
+                        <img 
+                            src={avatarImg} 
+                            alt="Avatar" 
+                            className="w-full h-full object-cover"
+                            style={{ 
+                                transform: 'scale(1.3)',
+                                objectPosition: 'center 20%'
+                            }}
+                        />
+                    </div>
                     {!isCollapsed && (
                         <div className="flex-1 flex flex-col overflow-hidden">
                             <span className="text-base font-bold">Phạm Xuân Hoàng Long</span>
