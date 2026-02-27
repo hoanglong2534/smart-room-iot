@@ -3,7 +3,7 @@
 #include <DHT.h>
 
 // --- Cấu hình Wifi và MQTT ---
-const char* ssid = "MyWifi"
+const char* ssid = "MyWifi";
 const char* password = "iot@12345";
 const char* mqtt_server = "10.122.181.155";
 const int mqtt_port = 9999;
@@ -18,7 +18,7 @@ const char* topic_data = "smartroom/collect-data";
 #define LED_RED     32   
 #define LED_BLUE    33  
 #define LED_ORANGE  27   
-#define LDR_PIN     25
+#define LDR_PIN     34                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 
 // Ngưỡng
 #define TEMP_HIGH     24 
@@ -51,12 +51,19 @@ void reconnect() {
 }
 
 void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("ESP32 STARTING...");
+
   pinMode(LED_RED, OUTPUT);
   pinMode(LED_BLUE, OUTPUT);
   pinMode(LED_ORANGE, OUTPUT);
 
   dht.begin();
+
   setup_wifi();
+  Serial.println("WiFi connected");
+
   client.setServer(mqtt_server, mqtt_port);
 }
 
