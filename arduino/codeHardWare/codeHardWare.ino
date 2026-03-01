@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <DHT.h>
+#include <ArduinoJson.h>
 
 // --- Cấu hình Wifi và MQTT ---
 const char* ssid = "MyWifi";
@@ -11,6 +12,8 @@ const char* mqtt_user = "longpxh";
 const char* mqtt_pass = "longpxh@123";
 
 const char* topic_data = "smartroom/collect-data";
+const char* topic_control = "smartroom/control/device/+";
+const char* topic_status_prefix = "smartroom/status/device/";
 
 #define DHTPIN 26
 #define DHTTYPE DHT11
@@ -32,6 +35,11 @@ PubSubClient client(espClient);
 unsigned long lastRead = 0;
 const unsigned long INTERVAL = 2000;
 
+// Trạng thái tự động
+bool wasHot = false;
+bool wasHumid = false;
+bool wasDark = false;
+
 void setup_wifi() {
   delay(10);
   WiFi.begin(ssid, password);
@@ -40,11 +48,48 @@ void setup_wifi() {
   }
 }
 
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  String messageTemp;
+  for (int i = 0; i < length; i++) {
+    messageTemp += (char)payload[i];
+  }
+
+  StaticJsonDocument<200> doc;
+  DeserializationError error = deserializeJson(doc, messageTemp);
+  if (error) return;
+
+  String deviceId = doc["deviceId"].as<String>();
+  String action = doc["action"].as<String>();
+
+  int pin = -1;
+  if (deviceId == "fan" || deviceId == "1") {
+    pin = LED_RED;
+  }
+  else if (deviceId == "light" || deviceId == "2") {
+    pin = LED_ORANGE;
+  }
+  else if (deviceId == "humidifier" || deviceId == "3") {
+    pin = LED_BLUE;
+  }
+  
+  if (pin == -1) return;
+
+  if (action == "ON") digitalWrite(pin, HIGH);
+  else if (action == "OFF") digitalWrite(pin, LOW);
+  else return;
+
+  String statusTopic = String(topic_status_prefix) + deviceId;
+  String statusPayload = "{\"deviceId\":\"" + deviceId + "\", \"status\":\"" + action + "\"}";
+  client.publish(statusTopic.c_str(), statusPayload.c_str());
+}
+
 void reconnect() {
   while (!client.connected()) {
     String clientId = "ESP32Client-";
     clientId += String(random(0xffff), HEX);
-    if (!client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+    if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+      client.subscribe(topic_control);
+    } else {
       delay(5000);
     }
   }
@@ -65,6 +110,7 @@ void setup() {
   Serial.println("WiFi connected");
 
   client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(mqttCallback); 
 }
 
 void loop() {
@@ -91,23 +137,30 @@ void loop() {
   );
 
 
-  if (temp >= TEMP_HIGH) {
+  if (temp >= TEMP_HIGH && !wasHot) {
     digitalWrite(LED_RED, HIGH);
-  } else {
+    wasHot = true; 
+  } else if (temp < TEMP_HIGH && wasHot) {
     digitalWrite(LED_RED, LOW);
+    wasHot = false; 
   }
 
-  if (humi >= HUMID_HIGH) {
+  if (humi >= HUMID_HIGH && !wasHumid) {
     digitalWrite(LED_BLUE, HIGH);
-  } else {
+    wasHumid = true;
+  } else if (humi < HUMID_HIGH && wasHumid) {
     digitalWrite(LED_BLUE, LOW);
+    wasHumid = false;
   }
 
-  if (lightValue > LIGHT_DARK) {
+  if (lightValue > LIGHT_DARK && !wasDark) {
     digitalWrite(LED_ORANGE, HIGH);
-  } else {
+    wasDark = true;
+  } else if (lightValue <= LIGHT_DARK && wasDark) {
     digitalWrite(LED_ORANGE, LOW);
+    wasDark = false;
   }
+
 
   // --- PUB MQTT ---
   String payload = "{";
