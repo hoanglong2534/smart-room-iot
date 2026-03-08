@@ -26,7 +26,7 @@ const char* topic_status_prefix = "smartroom/status/device/";
 // Ngưỡng
 #define TEMP_HIGH     24 
 #define HUMID_HIGH    69.9   
-#define LIGHT_DARK    1500   
+#define LIGHT_DARK    700   
 
 DHT dht(DHTPIN, DHTTYPE);
 WiFiClient espClient;
@@ -125,7 +125,7 @@ void loop() {
 
   float temp = dht.readTemperature();
   float humi = dht.readHumidity();
-  int lightValue = analogRead(LDR_PIN);
+  int lightValue = 4095 - analogRead(LDR_PIN);
 
   if (isnan(temp) || isnan(humi)) {
     return;
@@ -153,10 +153,10 @@ void loop() {
     wasHumid = false;
   }
 
-  if (lightValue > LIGHT_DARK && !wasDark) {
+  if (lightValue < LIGHT_DARK && !wasDark) {
     digitalWrite(LED_ORANGE, HIGH);
     wasDark = true;
-  } else if (lightValue <= LIGHT_DARK && wasDark) {
+  } else if (lightValue >= LIGHT_DARK && wasDark) {
     digitalWrite(LED_ORANGE, LOW);
     wasDark = false;
   }
