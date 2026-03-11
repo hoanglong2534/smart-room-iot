@@ -24,7 +24,7 @@ const Filter = ({
                                 value={dateRange}
                                 onChange={onDateRangeChange}
                                 ampm={false}
-                                format="dd/MM/yyyy HH:mm:ss"
+                                format="DD/MM/YYYY HH:mm:ss"
                                 slots={{ field: SingleInputDateRangeField }}
                                 slotProps={{
                                     textField: {

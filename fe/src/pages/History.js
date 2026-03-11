@@ -1,32 +1,35 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import DataTable from '../components/DataTable';
 import Filter from '../components/Filter';
-import statusSuccess from '../assets/Status.png';
-import statusFailed from '../assets/Status (1).png';
+import statusPending from '../assets/Status.png';
+import statusOff from '../assets/Status (1).png';
+import statusOn from '../assets/col 6.png';
 import dayjs from 'dayjs';
 import { getActionHistory } from '../services/api';
 
 const History = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const [data, setData] = useState([]);
     const [totalItems, setTotalItems] = useState(0);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(15);
+    const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
+    const [itemsPerPage, setItemsPerPage] = useState(parseInt(searchParams.get('size')) || 15);
     const [loading, setLoading] = useState(false);
 
-    const [filterDevice, setFilterDevice] = useState('all');
-    const [dateRange, setDateRange] = useState([
-        dayjs('2026-01-01'),
-        dayjs('2026-01-31')
-    ]);
+    const [filterDevice, setFilterDevice] = useState(searchParams.get('device') || 'all');
 
+    const initDateRange = () => {
+        const from = searchParams.get('from');
+        const to = searchParams.get('to');
+        if (from && to) return [dayjs(from), dayjs(to)];
+        return [dayjs().startOf('month'), dayjs().endOf('month')];
+    };
+    const [dateRange, setDateRange] = useState(initDateRange());
 
-    const [tempFilterDevice, setTempFilterDevice] = useState('all');
-    const [tempDateRange, setTempDateRange] = useState([
-        dayjs('2026-01-01'),
-        dayjs('2026-01-31')
-    ]);
+    const [tempFilterDevice, setTempFilterDevice] = useState(searchParams.get('device') || 'all');
+    const [tempDateRange, setTempDateRange] = useState(initDateRange());
 
     const columns = [
         { header: 'ID', accessor: 'id' },
@@ -35,15 +38,21 @@ const History = () => {
         {
             header: 'TRẠNG THÁI',
             accessor: 'status',
-            render: (row) => (
-                <div className="flex justify-center">
-                    <img
-                        src={row.status === 'SUCCESS' || row.status === 'success' ? statusSuccess : statusFailed}
-                        alt={row.status}
-                        className="h-[25px] object-contain"
-                    />
-                </div>
-            )
+            render: (row) => {
+                let iconSrc = statusPending;
+                if (row.status === 'ON') iconSrc = statusOn;
+                else if (row.status === 'OFF') iconSrc = statusOff;
+
+                return (
+                    <div className="flex justify-center">
+                        <img
+                            src={iconSrc}
+                            alt={row.status}
+                            className="h-[25px] object-contain"
+                        />
+                    </div>
+                );
+            }
         },
         {
             header: 'THỜI GIAN',
@@ -54,6 +63,18 @@ const History = () => {
 
     const [sortConfig, setSortConfig] = useState({ key: 'time', direction: 'desc' });
 
+
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (currentPage !== 1) params.set('page', currentPage);
+        if (itemsPerPage !== 15) params.set('size', itemsPerPage);
+        if (filterDevice !== 'all') params.set('device', filterDevice);
+        if (dateRange[0] && dateRange[1]) {
+            params.set('from', dateRange[0].format('YYYY-MM-DDTHH:mm:ss'));
+            params.set('to', dateRange[1].format('YYYY-MM-DDTHH:mm:ss'));
+        }
+        setSearchParams(params, { replace: true });
+    }, [currentPage, itemsPerPage, filterDevice, dateRange, setSearchParams]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -70,8 +91,8 @@ const History = () => {
                 }
 
                 if (dateRange[0] && dateRange[1]) {
-                    params.from = dateRange[0].toISOString();
-                    params.to = dateRange[1].toISOString();
+                    params.from = dateRange[0].format('YYYY-MM-DDTHH:mm:ss');
+                    params.to = dateRange[1].format('YYYY-MM-DDTHH:mm:ss');
                 }
 
                 const response = await getActionHistory(params);
