@@ -10,8 +10,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ActionHistoryRequest {
-    private String deviceName;
+    private String deviceId;
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime from;
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime to;
 
     private Integer page;

@@ -17,6 +17,12 @@ public class DataSensorSpecification {
 
             List<Predicate> predicateList = new ArrayList<>();
 
+            if(request.getSensorId() != null){
+                predicateList.add(
+                        criteriaBuilder.equal(root.get("sensor").get("id"), request.getSensorId())
+                );
+            }
+
             if(request.getName() != null && !request.getName().isBlank()){
                 predicateList.add(
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("sensor").get("name")), "%" + request.getName().toLowerCase() + "%")

@@ -70,8 +70,8 @@ const History = () => {
         if (itemsPerPage !== 15) params.set('size', itemsPerPage);
         if (filterDevice !== 'all') params.set('device', filterDevice);
         if (dateRange[0] && dateRange[1]) {
-            params.set('from', dateRange[0].format('YYYY-MM-DDTHH:mm:ss'));
-            params.set('to', dateRange[1].format('YYYY-MM-DDTHH:mm:ss'));
+            params.set('from', dateRange[0].format('HH:mm:ss DD-MM-YYYY'));
+            params.set('to', dateRange[1].format('HH:mm:ss DD-MM-YYYY'));
         }
         setSearchParams(params, { replace: true });
     }, [currentPage, itemsPerPage, filterDevice, dateRange, setSearchParams]);
@@ -87,12 +87,12 @@ const History = () => {
                 };
 
                 if (filterDevice !== 'all') {
-                    params.deviceName = filterDevice;
+                    params.deviceId = filterDevice;
                 }
 
                 if (dateRange[0] && dateRange[1]) {
-                    params.from = dateRange[0].format('YYYY-MM-DDTHH:mm:ss');
-                    params.to = dateRange[1].format('YYYY-MM-DDTHH:mm:ss');
+                    params.from = dateRange[0].format('HH:mm:ss DD-MM-YYYY');
+                    params.to = dateRange[1].format('HH:mm:ss DD-MM-YYYY');
                 }
 
                 const response = await getActionHistory(params);

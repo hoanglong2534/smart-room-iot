@@ -11,6 +11,9 @@ import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
+import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.messaging.MessageChannel;
 
 @Configuration
@@ -44,31 +47,20 @@ public class MqttConfig {
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
         MqttConnectOptions options = new MqttConnectOptions();
         options.setServerURIs(new String[] { brokerUrl });
-        if (username != null && !username.isEmpty()) {
-            options.setUserName(username);
-        }
-        if (password != null && !password.isEmpty()) {
-            options.setPassword(password.toCharArray());
-        }
+        if (username != null && !username.isEmpty()) options.setUserName(username);
+        if (password != null && !password.isEmpty()) options.setPassword(password.toCharArray());
         options.setCleanSession(true);
         factory.setConnectionOptions(options);
         return factory;
     }
 
     @Bean
-    public MessageChannel mqttInputChannel() {
-        return new DirectChannel();
-    }
+    public MessageChannel mqttInputChannel() { return new DirectChannel(); }
 
     @Bean
-    public MessageProducer inbound() {
-        MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(clientId, mqttClientFactory(),
-                        sensorTopic, deviceStatusTopic);
-        adapter.setCompletionTimeout(5000);
-        adapter.setConverter(new DefaultPahoMessageConverter());
-        adapter.setQos(1);
-        adapter.setOutputChannel(mqttInputChannel());
-        return adapter;
+    public IntegrationFlow mqttInboundFlow() {
+        return IntegrationFlow.from(new MqttPahoMessageDrivenChannelAdapter(clientId, mqttClientFactory(), sensorTopic, deviceStatusTopic))
+                .channel(mqttInputChannel())
+                .get();
     }
 }

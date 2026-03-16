@@ -24,7 +24,7 @@ public class DataSensorEntity {
     private SensorEntity sensor;
 
     @Column(name = "value")
-    private Long value;
+    private Double value;
 
     @Column(name = "created_at",  columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false )
     private LocalDateTime createdAt;

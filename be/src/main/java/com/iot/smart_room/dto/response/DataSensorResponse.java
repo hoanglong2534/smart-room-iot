@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class DataSensorResponse {
     private String id;
     private String name;
-    private Long value;
+    private Double value;
     private LocalDateTime from;
     private LocalDateTime to;
 }

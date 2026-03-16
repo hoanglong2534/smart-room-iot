@@ -58,9 +58,9 @@ public class MqttUtils {
         DataSensorEntity entity = new DataSensorEntity();
         entity.setSensor(sensor);
 
-        long value = 0;
+        double value = 0;
         if (valueObj instanceof Number) {
-            value = ((Number) valueObj).longValue();
+            value = ((Number) valueObj).doubleValue();
         }
         entity.setValue(value);
         entity.setCreatedAt(LocalDateTime.now());
@@ -78,7 +78,18 @@ public class MqttUtils {
                 device.setCurrent_status(statusStr);
                 deviceRepository.save(device);
 
-                createHistory(device, statusStr);
+                actionHistoryRepository.findFirstByDeviceIdAndStatusOrderByCreatedAtDesc(deviceId, StatusEnum.PENDING)
+                    .ifPresentOrElse(
+                        pendingHistory -> {
+                            try {
+                                pendingHistory.setStatus(StatusEnum.valueOf(statusStr));
+                                if ("ON".equals(statusStr)) pendingHistory.setAction(ActionEnum.ON);
+                                if ("OFF".equals(statusStr)) pendingHistory.setAction(ActionEnum.OFF);
+                            } catch (Exception ignored) {}
+                            actionHistoryRepository.save(pendingHistory);
+                        },
+                        () -> createHistory(device, statusStr)
+                    );
                 
                 messagingTemplate.convertAndSend("/topic/device-status", (Object) data);
             });

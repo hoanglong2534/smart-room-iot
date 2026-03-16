@@ -29,9 +29,19 @@ export const getSensorData = async (params) => {
     }
 };
 
+export const getSensorsList = async () => {
+    try {
+        const response = await api.get('/sensors/list');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching sensors list:', error);
+        throw error;
+    }
+};
+
 export const controlDevice = async (payload) => {
     try {
-        const response = await api.post('/devices/control', payload);
+        const response = await api.post('/device/control', payload);
         return response.data;
     } catch (error) {
         console.error('Error controlling device:', error);
@@ -39,9 +49,9 @@ export const controlDevice = async (payload) => {
     }
 };
 
-export const getDevices = async () => {
+export const getDevices = async (params) => {
     try {
-        const response = await api.get('/devices');
+        const response = await api.get('/device', { params });
         return response.data;
     } catch (error) {
         console.error('Error fetching devices:', error);

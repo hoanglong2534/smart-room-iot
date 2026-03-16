@@ -11,8 +11,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class DataSensorRequest {
     private String name;
-    private Long value;
+    private Long sensorId;
+    private Double value;
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime from;
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm:ss dd-MM-yyyy")
     private LocalDateTime to;
 
     private Integer page;

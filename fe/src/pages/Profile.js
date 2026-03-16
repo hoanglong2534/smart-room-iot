@@ -36,33 +36,35 @@ const Profile = () => {
     );
 
     const ActionButton = ({ icon, label, href, ...props }) => (
-        <a
-            href={href || "#"}
-            {...props}
-            className="group bg-[#FAF7F2] rounded-[20px] p-[30px] flex flex-col items-center justify-center gap-[20px] cursor-pointer hover:bg-[#3A2F24] transition-all duration-300 h-[220px] hover:-translate-y-1"
-        >
-            <img
-                src={icon}
-                alt={label}
-                className="w-[100px] h-[100px] object-contain transition-all duration-300 group-hover:brightness-0 group-hover:invert opacity-80 group-hover:opacity-100"
-            />
-            <span className="font-bold text-[1.3rem] text-[#3A2F24] group-hover:text-white transition-colors duration-300">
+        <div className="flex flex-col items-center gap-[12px] w-[160px]">
+            <span className="font-bold text-[1.1rem] text-[#3A2F24]">
                 {label}
             </span>
-        </a>
+            <a
+                href={href || "#"}
+                {...props}
+                className="group bg-[#FAF7F2] rounded-[22px] p-[30px] flex items-center justify-center cursor-pointer transition-all duration-300 w-full aspect-square hover:bg-[#3A2F24] hover:-translate-y-1 hover:shadow-lg"
+            >
+                <img
+                    src={icon}
+                    alt={label}
+                    className="w-full h-full object-contain transition-all duration-300 group-hover:brightness-0 group-hover:invert"
+                />
+            </a>
+        </div>
     );
 
     return (
         <div className="flex h-screen bg-bg-secondary font-sans text-text-title">
             <Sidebar />
 
-            <main className="flex-1 flex flex-col overflow-hidden p-[30px_50px]">
-                <header className="mb-[40px] flex items-center justify-between">
+            <main className="flex-1 flex flex-col overflow-hidden p-[20px_40px]">
+                <header className="mb-[20px] flex items-center justify-between">
 
                 </header>
 
                 <div className="flex-1 overflow-y-auto">
-                    <div className="bg-[#FAF7F2] rounded-[25px] p-[50px] shadow-[0_20px_40px_rgba(0,0,0,0.08)] mb-[40px] flex flex-col gap-[40px]">
+                    <div className="bg-[#FAF7F2] rounded-[25px] p-[35px_50px] shadow-[0_15px_30px_rgba(0,0,0,0.06)] mb-[25px] flex flex-col gap-[30px]">
 
                         <div className="flex items-start gap-[40px]">
                             <div className="w-[180px] h-[180px] rounded-full border-[5px] border-white shadow-lg flex-shrink-0 mt-[10px] overflow-hidden">
@@ -98,7 +100,7 @@ const Profile = () => {
                     </div>
 
                     {/* Actions Grid */}
-                    <div className="grid grid-cols-4 gap-[30px]">
+                    <div className="flex justify-between pt-[25px]">
                         <ActionButton icon={iconReport} label="Báo cáo" />
                         <ActionButton icon={iconApi} label="Tài liệu API" href="http://localhost:12345/swagger-ui/index.html" target="_blank" rel="noopener noreferrer" />
                         <ActionButton icon={iconFigma} label="Figma" target="_blank" rel="noopener noreferrer" href="https://www.figma.com/design/FlcxqATRxNNkvZJhLW9iQ0/IoT---Smart-Room?node-id=0-1&t=azezdRRlXeaa6fxi-1" />

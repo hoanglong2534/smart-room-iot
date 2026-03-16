@@ -4,7 +4,7 @@ import Sidebar from '../components/Sidebar';
 import DataTable from '../components/DataTable';
 import Filter from '../components/Filter';
 import dayjs from 'dayjs';
-import { getSensorData } from '../services/api';
+import { getSensorData, getSensorsList } from '../services/api';
 
 const SensorData = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -15,9 +15,10 @@ const SensorData = () => {
     const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
     const [itemsPerPage, setItemsPerPage] = useState(parseInt(searchParams.get('size')) || 15);
     const [loading, setLoading] = useState(false);
+    const [sensors, setSensors] = useState([]);
 
     // Filter State (Applied)
-    const [filterSensor, setFilterSensor] = useState(searchParams.get('sensor') || 'all');
+    const [filterSensor, setFilterSensor] = useState(searchParams.get('sensorId') || 'all');
     const [filterValue, setFilterValue] = useState(searchParams.get('value') || '');
 
     const initDateRange = () => {
@@ -29,7 +30,7 @@ const SensorData = () => {
     const [dateRange, setDateRange] = useState(initDateRange());
 
     // Temporary State (UI)
-    const [tempFilterSensor, setTempFilterSensor] = useState(searchParams.get('sensor') || 'all');
+    const [tempFilterSensor, setTempFilterSensor] = useState(searchParams.get('sensorId') || 'all');
     const [tempFilterValue, setTempFilterValue] = useState(searchParams.get('value') || '');
     const [tempDateRange, setTempDateRange] = useState(initDateRange());
 
@@ -40,12 +41,9 @@ const SensorData = () => {
             header: 'CẢM BIẾN',
             accessor: 'name',
             render: (row) => {
-                const displayNames = {
-                    'Humidity': 'Cảm biến độ ẩm',
-                    'Temperature': 'Cảm biến nhiệt độ',
-                    'Light': 'Cảm biến ánh sáng'
-                };
-                return <span className="font-medium">{displayNames[row.name] || row.name}</span>;
+                const name = row.name;
+                const displayName = name.toLowerCase().startsWith('cảm biến') ? name : `Cảm biến ${name.toLowerCase()}`;
+                return <span className="font-medium">{displayName}</span>;
             }
         },
         { header: 'GIÁ TRỊ CẢM BIẾN', accessor: 'value', render: (row) => <span className="font-bold text-[#333]">{row.value}</span> },
@@ -56,18 +54,29 @@ const SensorData = () => {
         },
     ];
 
-    // Sorting State
     const [sortConfig, setSortConfig] = useState({ key: 'rawTime', direction: 'desc' });
+
+    useEffect(() => {
+        const fetchSensors = async () => {
+            try {
+                const list = await getSensorsList();
+                setSensors(list || []);
+            } catch (error) {
+                console.error("Error fetching sensors list", error);
+            }
+        };
+        fetchSensors();
+    }, []);
 
     useEffect(() => {
         const params = new URLSearchParams();
         if (currentPage !== 1) params.set('page', currentPage);
         if (itemsPerPage !== 15) params.set('size', itemsPerPage);
-        if (filterSensor !== 'all') params.set('sensor', filterSensor);
+        if (filterSensor !== 'all') params.set('sensorId', filterSensor);
         if (filterValue) params.set('value', filterValue);
         if (dateRange[0] && dateRange[1]) {
-            params.set('from', dateRange[0].format('YYYY-MM-DDTHH:mm:ss'));
-            params.set('to', dateRange[1].format('YYYY-MM-DDTHH:mm:ss'));
+            params.set('from', dateRange[0].format('HH:mm:ss DD-MM-YYYY'));
+            params.set('to', dateRange[1].format('HH:mm:ss DD-MM-YYYY'));
         }
         setSearchParams(params, { replace: true });
     }, [currentPage, itemsPerPage, filterSensor, filterValue, dateRange, setSearchParams]);
@@ -84,12 +93,7 @@ const SensorData = () => {
                 };
 
                 if (filterSensor !== 'all') {
-                    const nameMap = {
-                        'humidity': 'Humidity',
-                        'temperature': 'Temperature',
-                        'light': 'Light'
-                    };
-                    params.name = nameMap[filterSensor] || filterSensor;
+                    params.sensorId = filterSensor;
                 }
 
                 if (filterValue) {
@@ -100,8 +104,8 @@ const SensorData = () => {
                 }
 
                 if (dateRange[0] && dateRange[1]) {
-                    params.from = dateRange[0].format('YYYY-MM-DDTHH:mm:ss');
-                    params.to = dateRange[1].format('YYYY-MM-DDTHH:mm:ss');
+                    params.from = dateRange[0].format('HH:mm:ss DD-MM-YYYY');
+                    params.to = dateRange[1].format('HH:mm:ss DD-MM-YYYY');
                 }
 
                 const response = await getSensorData(params);
@@ -163,9 +167,11 @@ const SensorData = () => {
                                     }}
                                 >
                                     <option value="all">Tất cả</option>
-                                    <option value="humidity">Cảm biến độ ẩm</option>
-                                    <option value="temperature">Cảm biến nhiệt độ</option>
-                                    <option value="light">Cảm biến ánh sáng</option>
+                                    {sensors.map(s => (
+                                        <option key={s.id} value={s.id}>
+                                            {s.name.toLowerCase().startsWith('cảm biến') ? s.name : `Cảm biến ${s.name.toLowerCase()}`}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 

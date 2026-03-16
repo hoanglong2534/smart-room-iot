@@ -28,6 +28,7 @@ public class DeviceEntity {
     @Column(name = "created_at",  columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false )
     private LocalDateTime created_at;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
     private List<ActionHistoryEntity> actionHistories;
 

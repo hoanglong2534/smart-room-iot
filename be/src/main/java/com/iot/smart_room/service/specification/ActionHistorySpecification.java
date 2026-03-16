@@ -17,9 +17,9 @@ public class ActionHistorySpecification {
 
             List<Predicate> predicateList = new ArrayList<>();
 
-            if(request.getDeviceName() != null && !request.getDeviceName().isBlank()){
+            if(request.getDeviceId() != null && !request.getDeviceId().isBlank()){
                 predicateList.add(
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("device").get("name")), "%" + request.getDeviceName().toLowerCase() + "%")
+                        criteriaBuilder.equal(root.get("device").get("id"), request.getDeviceId())
                 );
             }
 
