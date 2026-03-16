@@ -19,6 +19,16 @@ export const getActionHistory = async (params) => {
     }
 };
 
+export const getActionHistoryNames = async () => {
+    try {
+        const response = await api.get('/action-histories/names');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching action history names:', error);
+        throw error;
+    }
+};
+
 export const getSensorData = async (params) => {
     try {
         const response = await api.get('/sensors', { params });
@@ -31,7 +41,7 @@ export const getSensorData = async (params) => {
 
 export const getSensorsList = async () => {
     try {
-        const response = await api.get('/sensors/list');
+        const response = await api.get('/sensors/names');
         return response.data;
     } catch (error) {
         console.error('Error fetching sensors list:', error);

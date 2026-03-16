@@ -1,9 +1,8 @@
 package com.iot.smart_room.service;
 
-import com.iot.smart_room.dto.response.SensorResponse;
-
-import java.util.List;
+import java.util.Set;
 
 public interface SensorService {
-    List<SensorResponse> getAllSensors();
+
+    Set<String> getSensorNames();
 }

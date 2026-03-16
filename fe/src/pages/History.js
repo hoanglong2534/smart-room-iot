@@ -7,18 +7,20 @@ import statusPending from '../assets/Status.png';
 import statusOff from '../assets/Status (1).png';
 import statusOn from '../assets/col 6.png';
 import dayjs from 'dayjs';
-import { getActionHistory } from '../services/api';
+import { getActionHistory, getActionHistoryNames } from '../services/api';
 
 const History = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const initialDeviceFilter = searchParams.get('device') || searchParams.get('deviceName') || searchParams.get('deviceId') || 'all';
 
     const [data, setData] = useState([]);
     const [totalItems, setTotalItems] = useState(0);
     const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
     const [itemsPerPage, setItemsPerPage] = useState(parseInt(searchParams.get('size')) || 15);
     const [loading, setLoading] = useState(false);
+    const [deviceNames, setDeviceNames] = useState([]);
 
-    const [filterDevice, setFilterDevice] = useState(searchParams.get('device') || 'all');
+    const [filterDevice, setFilterDevice] = useState(initialDeviceFilter);
 
     const initDateRange = () => {
         const from = searchParams.get('from');
@@ -28,7 +30,7 @@ const History = () => {
     };
     const [dateRange, setDateRange] = useState(initDateRange());
 
-    const [tempFilterDevice, setTempFilterDevice] = useState(searchParams.get('device') || 'all');
+    const [tempFilterDevice, setTempFilterDevice] = useState(initialDeviceFilter);
     const [tempDateRange, setTempDateRange] = useState(initDateRange());
 
     const columns = [
@@ -63,6 +65,20 @@ const History = () => {
 
     const [sortConfig, setSortConfig] = useState({ key: 'time', direction: 'desc' });
 
+    useEffect(() => {
+        const fetchActionHistoryNames = async () => {
+            try {
+                const names = await getActionHistoryNames();
+                setDeviceNames(Array.isArray(names) ? names : []);
+            } catch (error) {
+                console.error('Error fetching action history names', error);
+                setDeviceNames([]);
+            }
+        };
+
+        fetchActionHistoryNames();
+    }, []);
+
 
     useEffect(() => {
         const params = new URLSearchParams();
@@ -87,7 +103,7 @@ const History = () => {
                 };
 
                 if (filterDevice !== 'all') {
-                    params.deviceId = filterDevice;
+                    params.deviceName = filterDevice;
                 }
 
                 if (dateRange[0] && dateRange[1]) {
@@ -150,9 +166,11 @@ const History = () => {
                                     onChange={(e) => setTempFilterDevice(e.target.value)}
                                 >
                                     <option value="all">Tất cả</option>
-                                    <option value="Máy hút ẩm">Máy hút ẩm</option>
-                                    <option value="Đèn">Đèn</option>
-                                    <option value="Quạt">Quạt</option>
+                                    {deviceNames.map((name, index) => (
+                                        <option key={`device-${index}-${name}`} value={name}>
+                                            {name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </Filter>

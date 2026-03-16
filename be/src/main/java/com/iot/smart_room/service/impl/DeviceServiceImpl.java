@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,5 +62,10 @@ public class DeviceServiceImpl implements DeviceService {
             history.setCreatedAt(LocalDateTime.now());
             actionHistoryRepository.save(history);
         }
+    }
+
+    @Override
+    public Set<String> getAllNames() {
+        return deviceRepository.getAllName();
     }
 }

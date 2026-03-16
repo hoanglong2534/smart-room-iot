@@ -8,6 +8,7 @@ import { getSensorData, getSensorsList } from '../services/api';
 
 const SensorData = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const initialSensorFilter = searchParams.get('sensor') || searchParams.get('sensorName') || searchParams.get('sensorId') || 'all';
 
     // State
     const [data, setData] = useState([]);
@@ -18,7 +19,7 @@ const SensorData = () => {
     const [sensors, setSensors] = useState([]);
 
     // Filter State (Applied)
-    const [filterSensor, setFilterSensor] = useState(searchParams.get('sensorId') || 'all');
+    const [filterSensor, setFilterSensor] = useState(initialSensorFilter);
     const [filterValue, setFilterValue] = useState(searchParams.get('value') || '');
 
     const initDateRange = () => {
@@ -30,9 +31,29 @@ const SensorData = () => {
     const [dateRange, setDateRange] = useState(initDateRange());
 
     // Temporary State (UI)
-    const [tempFilterSensor, setTempFilterSensor] = useState(searchParams.get('sensorId') || 'all');
+    const [tempFilterSensor, setTempFilterSensor] = useState(initialSensorFilter);
     const [tempFilterValue, setTempFilterValue] = useState(searchParams.get('value') || '');
     const [tempDateRange, setTempDateRange] = useState(initDateRange());
+
+    const getSensorOption = (sensor, index) => {
+        if (typeof sensor === 'string') {
+            return {
+                key: `sensor-${index}-${sensor}`,
+                value: sensor,
+                label: sensor,
+            };
+        }
+
+        const name = sensor?.name || '';
+        const id = sensor?.id;
+        const fallback = name || String(id || '');
+
+        return {
+            key: id ?? `sensor-${index}-${fallback}`,
+            value: name || String(id || ''),
+            label: fallback,
+        };
+    };
 
     // Columns Configuration
     const columns = [
@@ -40,11 +61,7 @@ const SensorData = () => {
         {
             header: 'CẢM BIẾN',
             accessor: 'name',
-            render: (row) => {
-                const name = row.name;
-                const displayName = name.toLowerCase().startsWith('cảm biến') ? name : `Cảm biến ${name.toLowerCase()}`;
-                return <span className="font-medium">{displayName}</span>;
-            }
+            render: (row) => <span className="font-medium">{row.name || ''}</span>
         },
         { header: 'GIÁ TRỊ CẢM BIẾN', accessor: 'value', render: (row) => <span className="font-bold text-[#333]">{row.value}</span> },
         {
@@ -72,7 +89,7 @@ const SensorData = () => {
         const params = new URLSearchParams();
         if (currentPage !== 1) params.set('page', currentPage);
         if (itemsPerPage !== 15) params.set('size', itemsPerPage);
-        if (filterSensor !== 'all') params.set('sensorId', filterSensor);
+        if (filterSensor !== 'all') params.set('sensor', filterSensor);
         if (filterValue) params.set('value', filterValue);
         if (dateRange[0] && dateRange[1]) {
             params.set('from', dateRange[0].format('HH:mm:ss DD-MM-YYYY'));
@@ -93,7 +110,7 @@ const SensorData = () => {
                 };
 
                 if (filterSensor !== 'all') {
-                    params.sensorId = filterSensor;
+                    params.sensorName = filterSensor;
                 }
 
                 if (filterValue) {
@@ -167,11 +184,14 @@ const SensorData = () => {
                                     }}
                                 >
                                     <option value="all">Tất cả</option>
-                                    {sensors.map(s => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.name.toLowerCase().startsWith('cảm biến') ? s.name : `Cảm biến ${s.name.toLowerCase()}`}
+                                    {sensors.map((s, index) => {
+                                        const option = getSensorOption(s, index);
+                                        return (
+                                        <option key={option.key} value={option.value}>
+                                            {option.label}
                                         </option>
-                                    ))}
+                                        );
+                                    })}
                                 </select>
                             </div>
 
