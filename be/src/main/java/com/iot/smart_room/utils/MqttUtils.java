@@ -11,6 +11,7 @@ import com.iot.smart_room.repo.ActionHistoryRepository;
 import com.iot.smart_room.repo.DataSensorRepository;
 import com.iot.smart_room.repo.DeviceRepository;
 import com.iot.smart_room.repo.SensorRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -34,9 +35,9 @@ public class MqttUtils {
     public void processSensorData(String payload) {
         try {
             Map<String, Object> data = objectMapper.readValue(payload, Map.class);
-            saveSensor("Temperature", data.get("temperature"));
-            saveSensor("Humidity", data.get("humidity"));
-            saveSensor("Light", data.get("light"));
+            saveSensor("Nhiệt độ", data.get("temperature"));
+            saveSensor("Độ ẩm", data.get("humidity"));
+            saveSensor("Ánh sáng", data.get("light"));
 
             messagingTemplate.convertAndSend("/topic/sensors", (Object) data);
         } catch (Exception e) {
@@ -68,33 +69,55 @@ public class MqttUtils {
         dataSensorRepository.save(entity);
     }
 
+    @Transactional
     public void processDeviceStatus(String topic, String payload) {
         try {
-            Long deviceId = Long.parseLong(topic.substring(topic.lastIndexOf("/") + 1));
             Map<String, Object> data = objectMapper.readValue(payload, Map.class);
             String statusStr = (String) data.get("status");
+            if (statusStr == null) return;
 
-            deviceRepository.findById(deviceId).ifPresent(device -> {
-                device.setCurrent_status(statusStr);
-                deviceRepository.save(device);
+            Long deviceId = resolveDeviceId(data, topic);
+            if (deviceId == null) return;
 
-                actionHistoryRepository.findFirstByDeviceIdAndStatusOrderByCreatedAtDesc(deviceId, StatusEnum.PENDING)
-                    .ifPresentOrElse(
-                        pendingHistory -> {
-                            try {
-                                pendingHistory.setStatus(StatusEnum.valueOf(statusStr));
-                                if ("ON".equals(statusStr)) pendingHistory.setAction(ActionEnum.ON);
-                                if ("OFF".equals(statusStr)) pendingHistory.setAction(ActionEnum.OFF);
-                            } catch (Exception ignored) {}
-                            actionHistoryRepository.save(pendingHistory);
-                        },
-                        () -> createHistory(device, statusStr)
-                    );
-                
+            // Direct update - bypass JPA entity cache issues
+            int updated = deviceRepository.updateStatus(deviceId, statusStr);
+            log.info("Updated device {} status to {} (rows: {})", deviceId, statusStr, updated);
+
+            if (updated > 0) {
+                deviceRepository.findById(deviceId).ifPresent(device -> {
+                    ActionHistoryEntity history = new ActionHistoryEntity();
+                    history.setDevice(device);
+                    history.setCreatedAt(LocalDateTime.now());
+                    try {
+                        history.setStatus(StatusEnum.valueOf(statusStr));
+                        if ("ON".equals(statusStr)) history.setAction(ActionEnum.ON);
+                        if ("OFF".equals(statusStr)) history.setAction(ActionEnum.OFF);
+                    } catch (Exception ignored) {}
+                    actionHistoryRepository.save(history);
+                });
+
                 messagingTemplate.convertAndSend("/topic/device-status", (Object) data);
-            });
+            }
         } catch (Exception e) {
-            log.error("Error processing device status", e);
+            log.error("Error processing device status: topic={}, payload={}", topic, payload, e);
+        }
+    }
+
+    /** Prefer numeric deviceId from JSON (ESP gửi "1","2","3"); fallback topic segment */
+    private Long resolveDeviceId(Map<String, Object> data, String topic) {
+        Object raw = data.get("deviceId");
+        if (raw != null) {
+            try {
+                if (raw instanceof Number) return ((Number) raw).longValue();
+                return Long.parseLong(raw.toString().trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        try {
+            return Long.parseLong(topic.substring(topic.lastIndexOf("/") + 1));
+        } catch (NumberFormatException e) {
+            log.warn("Cannot resolve device id from topic={} payload deviceId={}", topic, raw);
+            return null;
         }
     }
 

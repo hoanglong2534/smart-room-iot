@@ -63,4 +63,19 @@ public class MqttConfig {
                 .channel(mqttInputChannel())
                 .get();
     }
+
+    @Bean
+    public MessageChannel mqttOutboundChannel() {
+        return new DirectChannel();
+    }
+
+    @Bean
+    @org.springframework.integration.annotation.ServiceActivator(inputChannel = "mqttOutboundChannel")
+    public org.springframework.messaging.MessageHandler mqttOutbound() {
+        org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler messageHandler = 
+                new org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler(clientId + "_out", mqttClientFactory());
+        messageHandler.setAsync(true);
+        messageHandler.setDefaultTopic("smartroom/control");
+        return messageHandler;
+    }
 }
