@@ -52,14 +52,22 @@ export const applyRecords = (records, setSeriesData, setSnapshot, setLoadingDevi
         let latestTime = null;
         let latestHumidity = null, latestLight = null, latestTemperature = null;
 
-        records.forEach((record) => {
+        const sortedRecords = [...records].reverse();
+
+        sortedRecords.forEach((record) => {
             const key = toSensorKey(record.name);
             const value = toNumber(record.value);
             const time = record.from || record.time;
             if (!key || value === null) return;
 
-            next[key].push({ time: toTimeLabel(time), value });
-            if (next[key].length > MAX_POINTS) next[key] = next[key].slice(-MAX_POINTS);
+            const timeLabel = toTimeLabel(time);
+
+            if (!next[key].some(item => item.time === timeLabel)) {
+                next[key].push({ time: timeLabel, value });
+            }
+            if (next[key].length > MAX_POINTS) {
+                next[key] = next[key].slice(-MAX_POINTS);
+            }
 
             latestTime = time || latestTime;
             if (key === 'humidity') latestHumidity = value;

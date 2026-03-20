@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import com.iot.smart_room.config.MqttGateway;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +32,7 @@ public class DeviceServiceImpl implements DeviceService {
     private final DeviceRepository deviceRepository;
     private final ActionHistoryRepository actionHistoryRepository;
     private final DeviceMapper deviceMapper;
+    private final MqttGateway mqttGateway;
 
     @Override
     public Page<DeviceResponse> getAllDevices(DeviceRequest request) {
@@ -49,7 +51,13 @@ public class DeviceServiceImpl implements DeviceService {
     @Override
     @Transactional
     public void controlDevice(DeviceControlRequest request) throws Exception {
-        Long deviceId = Long.parseLong(request.getDeviceId());
+        String reqDeviceId = request.getDeviceId();
+        Long deviceId;
+        if (reqDeviceId != null && reqDeviceId.startsWith("DEV")) {
+            deviceId = Long.parseLong(reqDeviceId.substring(3));
+        } else {
+            deviceId = Long.parseLong(reqDeviceId);
+        }
         String action = request.getAction();
 
         DeviceEntity device = deviceRepository.findById(deviceId).orElse(null);
@@ -61,6 +69,12 @@ public class DeviceServiceImpl implements DeviceService {
             if ("OFF".equals(action)) history.setAction(ActionEnum.OFF);
             history.setCreatedAt(LocalDateTime.now());
             actionHistoryRepository.save(history);
+
+            // Giữ DB đồng bộ với lệnh gửi đi để GET /device trả đúng trạng thái (MQTT status có thể tới trễ hoặc lệch broker)
+            device.setCurrent_status(action);
+            deviceRepository.save(device);
+
+            mqttGateway.sendToMqtt("smartroom/control/device/" + deviceId, "{\"deviceId\":\"" + deviceId + "\", \"action\":\"" + action + "\"}");
         }
     }
 

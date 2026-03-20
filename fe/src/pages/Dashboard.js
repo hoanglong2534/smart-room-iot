@@ -20,10 +20,14 @@ import { getTrend, applyRecords } from '../utils/dashboardUtils';
 import { useDashboardData } from '../utils/useDashboardData';
 
 const Dashboard = () => {
-    const { devices, loadingDevices, snapshot, seriesData, setDevices, setLoadingDevices } = useDashboardData(applyRecords);
+    const { devices, loadingDevices, snapshot, seriesData, setDevices, setLoadingDevices, isHardwareOnline } = useDashboardData(applyRecords);
     const [selectedDevice, setSelectedDevice] = useState('humidifier');
 
     const toggleDevice = async (deviceKey) => {
+        if (!isHardwareOnline) {
+            alert('Thiết bị đang mất kết nối, không thể điều khiển.');
+            return;
+        }
         const deviceObj = devices[deviceKey];
         if (!deviceObj.isInit || !deviceObj.id) {
             alert('Chưa tải được cấu hình thiết bị từ server.');
@@ -35,9 +39,16 @@ const Dashboard = () => {
 
         try {
             await controlDevice({ deviceId: deviceObj.id.toString(), action: action });
-            setTimeout(() => {
-                setLoadingDevices(prev => (prev[deviceKey] ? { ...prev, [deviceKey]: false } : prev));
-            }, 10000);
+            const newIsOn = action === "ON";
+            setDevices(prev => ({
+                ...prev,
+                [deviceKey]: {
+                    ...prev[deviceKey],
+                    isOn: newIsOn,
+                    isInit: true
+                }
+            }));
+            setLoadingDevices(prev => ({ ...prev, [deviceKey]: false }));
         } catch (error) {
             console.error("Failed to toggle device", error);
             setLoadingDevices(prev => ({ ...prev, [deviceKey]: false }));
@@ -64,8 +75,15 @@ const Dashboard = () => {
         <div className="flex h-screen bg-bg-secondary font-sans text-text-title">
             <Sidebar />
             <main className="flex-1 flex flex-col overflow-hidden p-[20px_40px]">
-                <header className="py-2.5 mb-5"></header>
-                <div className="flex-1 overflow-y-auto flex flex-col gap-[25px] p-4">
+                <header className="py-2.5 mb-5 flex justify-between items-center">
+                    {!isHardwareOnline && (
+                        <div className="flex items-center gap-2 bg-red-100 text-red-600 px-4 py-2 rounded-full border border-red-200 animate-pulse shadow-sm">
+                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <span className="font-bold text-sm">MẤT KẾT NỐI VỚI MẠCH</span>
+                        </div>
+                    )}
+                </header>
+                <div className={`flex-1 overflow-y-auto flex flex-col gap-[25px] p-4 transition-opacity duration-500 ${!isHardwareOnline ? 'opacity-60 grayscale' : 'opacity-100'}`}>
                     <div className="grid grid-cols-3 gap-[25px]">
                         <StatCard title="ĐỘ ẨM" icon={iconHumidity} value={humidityValue} trendIcon={humidityTrend.icon} trendText={humidityTrend.text} isActive={selectedDevice === 'humidifier'} onClick={() => setSelectedDevice('humidifier')} bgClass="bg-card-humidity" textClass="text-text-humidity" />
                         <StatCard title="ÁNH SÁNG" icon={iconLight} value={lightValue} trendIcon={lightTrend.icon} trendText={lightTrend.text} isActive={selectedDevice === 'light'} onClick={() => setSelectedDevice('light')} bgClass="bg-card-light" textClass="text-text-light" />
@@ -77,9 +95,9 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <div className="grid grid-cols-3 gap-[25px]">
-                        <DeviceCard name="MÁY HÚT ẨM" isOn={devices.humidifier.isOn} isLoading={loadingDevices.humidifier} iconStatic={deviceHumidifierStatic} iconGif={gifHumidifierAnim} onClick={() => toggleDevice('humidifier')} activeBgClass="bg-card-humidity" activeTextClass="text-text-humidity" activeTitleColor="text-[#00838F]" />
-                        <DeviceCard name="ĐÈN" isOn={devices.light.isOn} isLoading={loadingDevices.light} iconStatic={deviceLightStatic} iconGif={gifLightAnim} onClick={() => toggleDevice('light')} activeBgClass="bg-card-light" activeTextClass="text-text-light" activeTitleColor="text-[#F9A825]" />
-                        <DeviceCard name="QUẠT" isOn={devices.fan.isOn} isLoading={loadingDevices.fan} iconStatic={deviceFanStatic} iconGif={gifFanAnim} onClick={() => toggleDevice('fan')} activeBgClass="bg-card-temp" activeTextClass="text-text-temp" activeTitleColor="text-[#C2185B]" />
+                        <DeviceCard name="MÁY HÚT ẨM" isOn={devices.humidifier.isOn} isLoading={loadingDevices.humidifier} isHardwareOnline={isHardwareOnline} iconStatic={deviceHumidifierStatic} iconGif={gifHumidifierAnim} onClick={() => toggleDevice('humidifier')} activeBgClass="bg-card-humidity" activeTextClass="text-text-humidity" activeTitleColor="text-[#00838F]" />
+                        <DeviceCard name="ĐÈN" isOn={devices.light.isOn} isLoading={loadingDevices.light} isHardwareOnline={isHardwareOnline} iconStatic={deviceLightStatic} iconGif={gifLightAnim} onClick={() => toggleDevice('light')} activeBgClass="bg-card-light" activeTextClass="text-text-light" activeTitleColor="text-[#F9A825]" />
+                        <DeviceCard name="QUẠT" isOn={devices.fan.isOn} isLoading={loadingDevices.fan} isHardwareOnline={isHardwareOnline} iconStatic={deviceFanStatic} iconGif={gifFanAnim} onClick={() => toggleDevice('fan')} activeBgClass="bg-card-temp" activeTextClass="text-text-temp" activeTitleColor="text-[#C2185B]" />
                     </div>
                 </div>
             </main>

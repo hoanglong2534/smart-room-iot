@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DeviceResponse {
-    private String id;
+    private Long id;
     private String name;
     private String currentStatus;
     private LocalDateTime createdAt;
