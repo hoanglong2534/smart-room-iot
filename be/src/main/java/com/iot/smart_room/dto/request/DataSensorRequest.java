@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class DataSensorRequest {
     private String name;
+    private String sensorName;
     private Long sensorId;
     private Double value;
     @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm:ss dd-MM-yyyy")

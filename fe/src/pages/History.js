@@ -7,7 +7,10 @@ import statusPending from '../assets/Status.png';
 import statusOff from '../assets/Status (1).png';
 import statusOn from '../assets/col 6.png';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { getActionHistory, getActionHistoryNames } from '../services/api';
+
+dayjs.extend(customParseFormat);
 
 const History = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -25,7 +28,7 @@ const History = () => {
     const initDateRange = () => {
         const from = searchParams.get('from');
         const to = searchParams.get('to');
-        if (from && to) return [dayjs(from), dayjs(to)];
+        if (from && to) return [dayjs(from, 'HH:mm:ss DD-MM-YYYY'), dayjs(to, 'HH:mm:ss DD-MM-YYYY')];
         return [dayjs().startOf('month'), dayjs().endOf('month')];
     };
     const [dateRange, setDateRange] = useState(initDateRange());
@@ -113,7 +116,8 @@ const History = () => {
 
                 const response = await getActionHistory(params);
                 setData(response.content || []);
-                setTotalItems(response.totalElements || 0);
+                const total = response.page ? response.page.totalElements : (response.totalElements || 0);
+                setTotalItems(total);
             } catch (error) {
                 console.error("Error loading history data", error);
                 setData([]);

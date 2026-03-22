@@ -4,7 +4,10 @@ import Sidebar from '../components/Sidebar';
 import DataTable from '../components/DataTable';
 import Filter from '../components/Filter';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { getSensorData, getSensorsList } from '../services/api';
+
+dayjs.extend(customParseFormat);
 
 const SensorData = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -25,7 +28,7 @@ const SensorData = () => {
     const initDateRange = () => {
         const from = searchParams.get('from');
         const to = searchParams.get('to');
-        if (from && to) return [dayjs(from), dayjs(to)];
+        if (from && to) return [dayjs(from, 'HH:mm:ss DD-MM-YYYY'), dayjs(to, 'HH:mm:ss DD-MM-YYYY')];
         return [dayjs().startOf('month'), dayjs().endOf('month')];
     };
     const [dateRange, setDateRange] = useState(initDateRange());
@@ -127,7 +130,8 @@ const SensorData = () => {
 
                 const response = await getSensorData(params);
                 setData(response.content || []);
-                setTotalItems(response.totalElements || 0);
+                const total = response.page ? response.page.totalElements : (response.totalElements || 0);
+                setTotalItems(total);
             } catch (error) {
                 console.error("Error loading sensor data", error);
                 setData([]);

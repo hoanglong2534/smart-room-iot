@@ -23,9 +23,15 @@ public class DataSensorSpecification {
                 );
             }
 
+            if(request.getSensorName() != null && !request.getSensorName().isBlank()){
+                predicateList.add(
+                        criteriaBuilder.equal(root.get("sensor").get("name"), request.getSensorName())
+                );
+            }
+
             if(request.getName() != null && !request.getName().isBlank()){
                 predicateList.add(
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("sensor").get("name")), "%" + request.getName().toLowerCase() + "%")
+                        criteriaBuilder.equal(root.get("sensor").get("name"), request.getName())
                 );
             }
 

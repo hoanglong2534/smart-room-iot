@@ -21,7 +21,7 @@ public class DataSensorController {
     private final SensorService sensorService;
 
     @GetMapping("")
-    public Page<DataSensorResponse> getDataSersors(@ModelAttribute DataSensorRequest dataSensorRequest){
+    public Page<DataSensorResponse> getDataSensors(@ModelAttribute DataSensorRequest dataSensorRequest){
         return dataSensorService.search(dataSensorRequest);
     }
 

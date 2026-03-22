@@ -23,6 +23,12 @@ public class ActionHistorySpecification {
                 );
             }
 
+            if(request.getDeviceName() != null && !request.getDeviceName().isBlank()){
+                predicateList.add(
+                        criteriaBuilder.equal(root.get("device").get("name"), request.getDeviceName())
+                );
+            }
+
             if(request.getFrom() != null && request.getTo() != null){
                 predicateList.add(
                         criteriaBuilder.between(root.get("createdAt"), request.getFrom(), request.getTo())
