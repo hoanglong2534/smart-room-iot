@@ -101,7 +101,13 @@ const Profile = () => {
 
                     {/* Actions Grid */}
                     <div className="flex justify-between pt-[25px]">
-                        <ActionButton icon={iconReport} label="Báo cáo" />
+                        <ActionButton 
+                            icon={iconReport} 
+                            label="Báo cáo" 
+                            href="/report.pdf" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                        />
                         <ActionButton icon={iconApi} label="Tài liệu API" href="http://localhost:12345/swagger-ui/index.html" target="_blank" rel="noopener noreferrer" />
                         <ActionButton icon={iconFigma} label="Figma" target="_blank" rel="noopener noreferrer" href="https://www.figma.com/design/FlcxqATRxNNkvZJhLW9iQ0/IoT---Smart-Room?node-id=0-1&t=azezdRRlXeaa6fxi-1" />
                         <ActionButton icon={iconGithub} label="Github" target="_blank" rel="noopener noreferrer" href="https://github.com/hoanglong2534/smart-room-iot" />
