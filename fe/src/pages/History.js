@@ -102,7 +102,7 @@ const History = () => {
                 const params = {
                     page: currentPage - 1,
                     size: itemsPerPage,
-                    sortType: 'desc'
+                    sortType: sortConfig.direction
                 };
 
                 if (filterDevice !== 'all') {
@@ -179,21 +179,30 @@ const History = () => {
                             </div>
                         </Filter>
 
-                        {loading ? (
-                            <div className="flex justify-center items-center py-10">Đang tải...</div>
-                        ) : (
-                            <DataTable
-                                columns={columns}
-                                data={data}
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                                itemsPerPage={itemsPerPage}
-                                onItemsPerPageChange={setItemsPerPage}
-                                onSort={handleSort}
-                                sortConfig={sortConfig}
-                            />
-                        )}
+                        <div className="relative">
+                            {loading && (
+                                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-[15px] transition-all duration-[2000ms]">
+                                    <div className="flex flex-col items-center gap-[10px]">
+                                        <div className="w-[30px] h-[30px] border-4 border-[#B08955] border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="text-[0.9rem] font-medium text-[#727681]">Đang cập nhật...</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className={`transition-opacity duration-[2000ms] ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+                                <DataTable
+                                    columns={columns}
+                                    data={data}
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                    itemsPerPage={itemsPerPage}
+                                    onItemsPerPageChange={setItemsPerPage}
+                                    onSort={handleSort}
+                                    sortConfig={sortConfig}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>
