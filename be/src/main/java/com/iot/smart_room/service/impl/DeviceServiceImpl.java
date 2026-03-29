@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.CompletableFuture;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -69,6 +70,29 @@ public class DeviceServiceImpl implements DeviceService {
             if ("OFF".equals(action)) history.setAction(ActionEnum.OFF);
             history.setCreatedAt(LocalDateTime.now());
             actionHistoryRepository.save(history);
+
+            final Long historyId = history.getId();
+            final String expectedAction = action;
+            CompletableFuture.runAsync(() -> {
+                try {
+                    Thread.sleep(1500);
+                    actionHistoryRepository.findById(historyId).ifPresent(h -> {
+                        if (h.getStatus() == StatusEnum.PENDING) {
+                            String normalized = expectedAction == null ? "" : expectedAction.trim().toUpperCase();
+                            if ("ON".equals(normalized)) {
+                                h.setAction(ActionEnum.ON);
+                                h.setStatus(StatusEnum.ON);
+                            } else if ("OFF".equals(normalized)) {
+                                h.setAction(ActionEnum.OFF);
+                                h.setStatus(StatusEnum.OFF);
+                            }
+                            actionHistoryRepository.save(h);
+                        }
+                    });
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
+                }
+            });
 
             // Giữ DB đồng bộ với lệnh gửi đi để GET /device trả đúng trạng thái (MQTT status có thể tới trễ hoặc lệch broker)
             device.setCurrent_status(action);

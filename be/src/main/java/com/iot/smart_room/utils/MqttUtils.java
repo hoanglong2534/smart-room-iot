@@ -11,7 +11,7 @@ import com.iot.smart_room.repo.ActionHistoryRepository;
 import com.iot.smart_room.repo.DataSensorRepository;
 import com.iot.smart_room.repo.DeviceRepository;
 import com.iot.smart_room.repo.SensorRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -41,6 +41,12 @@ public class MqttUtils {
 
             messagingTemplate.convertAndSend("/topic/sensors", (Object) data);
         } catch (Exception e) {
+            try {
+                java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter("/tmp/mqtt_log.txt", true));
+                pw.println("Error processing sensor data: " + e.getMessage());
+                e.printStackTrace(pw);
+                pw.close();
+            } catch (Exception ex) {}
             log.error("Error processing sensor data", e);
         }
     }
@@ -72,51 +78,76 @@ public class MqttUtils {
     @Transactional
     public void processDeviceStatus(String topic, String payload) {
         try {
+            System.out.println("=== MQTT STATUS RECEIVED ===");
+            System.out.println("Topic: " + topic);
+            System.out.println("Payload: " + payload);
+            
             Map<String, Object> data = objectMapper.readValue(payload, Map.class);
             String statusStr = (String) data.get("status");
-            if (statusStr == null) return;
+            if (statusStr == null) {
+                System.out.println("Status is null, ignoring");
+                return;
+            }
 
+            System.out.println("Processing status update: topic=" + topic + ", payload=" + payload);
             Long deviceId = resolveDeviceId(data, topic);
-            if (deviceId == null) return;
-
-            // Direct update - bypass JPA entity cache issues
-            int updated = deviceRepository.updateStatus(deviceId, statusStr);
-            log.info("Updated device {} status to {} (rows: {})", deviceId, statusStr, updated);
-
-            if (updated > 0) {
-                deviceRepository.findById(deviceId).ifPresent(device -> {
-                    ActionHistoryEntity history = new ActionHistoryEntity();
-                    history.setDevice(device);
-                    history.setCreatedAt(LocalDateTime.now());
+            System.out.println("Resolved deviceId: " + deviceId);
+            
+            if (deviceId == null) {
+                System.out.println("FAILED to resolve deviceId");
+                return;
+            }
+            
+            deviceRepository.updateStatus(deviceId, statusStr);
+            System.out.println("Updated device status in DB");
+            
+            actionHistoryRepository.findFirstByDeviceIdAndStatusOrderByCreatedAtDesc(deviceId, StatusEnum.PENDING)
+                .ifPresentOrElse(history -> {
                     try {
-                        history.setStatus(StatusEnum.valueOf(statusStr));
-                        if ("ON".equals(statusStr)) history.setAction(ActionEnum.ON);
-                        if ("OFF".equals(statusStr)) history.setAction(ActionEnum.OFF);
-                    } catch (Exception ignored) {}
-                    actionHistoryRepository.save(history);
+                        String normalizedStatus = statusStr.trim().toUpperCase();
+                        System.out.println("Found PENDING history ID " + history.getId() + ", updating to " + normalizedStatus);
+                        history.setStatus(StatusEnum.valueOf(normalizedStatus));
+                        history.setAction("ON".equals(normalizedStatus) ? ActionEnum.ON : ActionEnum.OFF);
+                        actionHistoryRepository.save(history);
+                        System.out.println("UPDATED ActionHistory ID " + history.getId() + " to " + normalizedStatus);
+                    } catch (Exception e) {
+                        System.out.println("ERROR updating history: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }, () -> {
+                    System.out.println("NO PENDING record for device " + deviceId);
+                    // Fallback: create history if none found
+                    deviceRepository.findById(deviceId).ifPresent(d -> createHistory(d, statusStr));
                 });
 
-                messagingTemplate.convertAndSend("/topic/device-status", (Object) data);
-            }
+            messagingTemplate.convertAndSend("/topic/device-status", (Object) data);
         } catch (Exception e) {
+            System.out.println("Error processing device status: " + e.getMessage());
+            e.printStackTrace();
             log.error("Error processing device status: topic={}, payload={}", topic, payload, e);
         }
     }
 
-    /** Prefer numeric deviceId from JSON (ESP gửi "1","2","3"); fallback topic segment */
+    /** Prefer numeric deviceId from JSON; fallback topic segment */
     private Long resolveDeviceId(Map<String, Object> data, String topic) {
         Object raw = data.get("deviceId");
         if (raw != null) {
+            String idStr = raw.toString().trim();
+            // Remove "fan", "light", etc and map to numeric if needed, 
+            // but the current ESP32 code uses String(pendingActionDeviceId) which is "1","2","3"
             try {
                 if (raw instanceof Number) return ((Number) raw).longValue();
-                return Long.parseLong(raw.toString().trim());
+                return Long.parseLong(idStr);
             } catch (NumberFormatException ignored) {
+                // Mappings if the circuit sends text names
+                if ("fan".equalsIgnoreCase(idStr)) return 1L;
+                if ("light".equalsIgnoreCase(idStr)) return 2L;
+                if ("humidifier".equalsIgnoreCase(idStr)) return 3L;
             }
         }
         try {
             return Long.parseLong(topic.substring(topic.lastIndexOf("/") + 1));
         } catch (NumberFormatException e) {
-            log.warn("Cannot resolve device id from topic={} payload deviceId={}", topic, raw);
             return null;
         }
     }

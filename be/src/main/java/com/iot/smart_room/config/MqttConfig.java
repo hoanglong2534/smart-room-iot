@@ -6,14 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
-import org.springframework.integration.core.MessageProducer;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
-import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.integration.dsl.IntegrationFlow;
-import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
-import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.messaging.MessageChannel;
 
 @Configuration
@@ -59,7 +55,9 @@ public class MqttConfig {
 
     @Bean
     public IntegrationFlow mqttInboundFlow() {
-        return IntegrationFlow.from(new MqttPahoMessageDrivenChannelAdapter(clientId, mqttClientFactory(), sensorTopic, deviceStatusTopic))
+        final String fallbackStatusTopic = "smartroom/status/#";
+        System.out.println("MQTT SUBSCRIBING TO: " + sensorTopic + " AND " + deviceStatusTopic + " AND " + fallbackStatusTopic);
+        return IntegrationFlow.from(new MqttPahoMessageDrivenChannelAdapter(clientId, mqttClientFactory(), sensorTopic, deviceStatusTopic, fallbackStatusTopic))
                 .channel(mqttInputChannel())
                 .get();
     }

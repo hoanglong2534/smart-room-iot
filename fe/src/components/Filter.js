@@ -1,9 +1,5 @@
 import React from 'react';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
-import { DateTimeRangePicker } from '@mui/x-date-pickers-pro/DateTimeRangePicker';
-import { SingleInputDateRangeField } from '@mui/x-date-pickers-pro/SingleInputDateRangeField';
+import dayjs from 'dayjs';
 
 const Filter = ({
     children,
@@ -11,45 +7,46 @@ const Filter = ({
     onDateRangeChange,
     onSearch
 }) => {
+    const fromValue = dateRange?.[0] ? dayjs(dateRange[0]).format('YYYY-MM-DDTHH:mm:ss') : '';
+    const toValue = dateRange?.[1] ? dayjs(dateRange[1]).format('YYYY-MM-DDTHH:mm:ss') : '';
+
+    const onFromChange = (e) => {
+        const nextFrom = e.target.value ? dayjs(e.target.value) : null;
+        const nextTo = dateRange?.[1] ?? null;
+        onDateRangeChange([nextFrom, nextTo]);
+    };
+
+    const onToChange = (e) => {
+        const nextFrom = dateRange?.[0] ?? null;
+        const nextTo = e.target.value ? dayjs(e.target.value) : null;
+        onDateRangeChange([nextFrom, nextTo]);
+    };
+
     return (
         <div className="flex flex-wrap gap-[20px] mb-[25px] items-end z-20 relative">
             {children}
 
             <div className="relative">
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <div className="flex flex-col gap-[5px]">
-                        <label className="text-[0.9rem] font-semibold text-[#727681] mb-[0px]">Tìm theo thời gian</label>
-                        <DemoContainer components={['DateTimeRangePicker']} sx={{ paddingTop: 0 }}>
-                            <DateTimeRangePicker
-                                value={dateRange}
-                                onChange={onDateRangeChange}
-                                ampm={false}
-                                format="DD/MM/YYYY HH:mm:ss"
-                                slots={{ field: SingleInputDateRangeField }}
-                                slotProps={{
-                                    textField: {
-                                        size: 'small',
-                                        sx: {
-                                            width: 380,
-                                            bgcolor: 'white',
-                                            '& .MuiOutlinedInput-root': {
-                                                height: '40px',
-                                                borderRadius: '8px',
-                                                borderColor: '#E0E0E0',
-                                                '&:hover fieldset': {
-                                                    borderColor: '#B08955',
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: '#B08955',
-                                                },
-                                            }
-                                        }
-                                    }
-                                }}
-                            />
-                        </DemoContainer>
+                <div className="flex flex-col gap-[5px]">
+                    <label className="text-[0.9rem] font-semibold text-[#727681] mb-[0px]">Tìm theo thời gian</label>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="datetime-local"
+                            value={fromValue}
+                            onChange={onFromChange}
+                            step="1"
+                            className="h-[40px] border border-[#E0E0E0] rounded-[8px] px-[10px] text-[0.9rem] text-[#333] bg-white outline-none focus:border-[#B08955]"
+                        />
+                        <span className="text-[#727681]">→</span>
+                        <input
+                            type="datetime-local"
+                            value={toValue}
+                            onChange={onToChange}
+                            step="1"
+                            className="h-[40px] border border-[#E0E0E0] rounded-[8px] px-[10px] text-[0.9rem] text-[#333] bg-white outline-none focus:border-[#B08955]"
+                        />
                     </div>
-                </LocalizationProvider>
+                </div>
             </div>
 
             <button

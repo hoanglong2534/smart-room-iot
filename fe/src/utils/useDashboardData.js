@@ -56,7 +56,6 @@ export const useDashboardData = (applyRecords) => {
     const trackedMaxSensorMsRef = useRef(null);
     const lastEvidenceMsRef = useRef(0);
 
-    const socketRef = useRef(null);
     const stompRef = useRef(null);
     const initialFetchDoneRef = useRef(false);
 
@@ -154,32 +153,6 @@ export const useDashboardData = (applyRecords) => {
     }, [fetchLatestData, fetchLatestDevices]);
 
     useEffect(() => {
-        const wsUrl = process.env.REACT_APP_SENSOR_WS_URL || 'ws://localhost:12345/smartroom/ws';
-        try {
-            const socket = new WebSocket(wsUrl);
-            socketRef.current = socket;
-            socket.onopen = () => setIsSocketConnected(true);
-            socket.onclose = () => setIsSocketConnected(false);
-            socket.onerror = () => setIsSocketConnected(false);
-            socket.onmessage = (event) => {
-                try {
-                    const payload = JSON.parse(event.data);
-                    const records = Array.isArray(payload) ? payload : (Array.isArray(payload?.content) ? payload.content : [payload]);
-                    ingestSensorRecords(records);
-                    applyRecords(records, setSeriesData, setSnapshot, setLoadingDevices);
-                } catch (error) {
-                    console.error('Error parsing realtime sensor payload:', error);
-                }
-            };
-        } catch (error) {
-            console.error('WebSocket connection init failed:', error);
-        }
-        return () => {
-            if (socketRef.current) socketRef.current.close();
-        };
-    }, [applyRecords, ingestSensorRecords]);
-
-    useEffect(() => {
         const brokerUrl = resolveStompBrokerUrl();
         const client = new Client({
             brokerURL: brokerUrl,
@@ -187,6 +160,18 @@ export const useDashboardData = (applyRecords) => {
             heartbeatIncoming: 10000,
             heartbeatOutgoing: 10000,
             onConnect: () => {
+                setIsSocketConnected(true);
+                client.subscribe('/topic/sensors', (message) => {
+                    try {
+                        const data = JSON.parse(message.body);
+                        const records = Array.isArray(data) ? data : [data];
+                        ingestSensorRecords(records);
+                        applyRecords(records, setSeriesData, setSnapshot, setLoadingDevices);
+                    } catch (e) {
+                        console.error('Error parsing sensors STOMP message:', e);
+                    }
+                });
+
                 client.subscribe('/topic/device-status', (message) => {
                     try {
                         const data = JSON.parse(message.body);
@@ -216,7 +201,8 @@ export const useDashboardData = (applyRecords) => {
                 });
             },
             onStompError: (frame) => console.error('STOMP error', frame.headers?.message, frame.body),
-            onWebSocketClose: () => {}
+            onWebSocketClose: () => setIsSocketConnected(false),
+            onWebSocketError: () => setIsSocketConnected(false)
         });
         stompRef.current = client;
         try {
@@ -234,9 +220,7 @@ export const useDashboardData = (applyRecords) => {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (!isSocketConnected) {
-                fetchLatestData();
-            }
+            if (!isSocketConnected) fetchLatestData();
             fetchLatestDevices();
             recomputeOnline();
         }, 2000);

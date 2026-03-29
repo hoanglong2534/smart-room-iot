@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Client } from '@stomp/stompjs';
 import Sidebar from '../components/Sidebar';
 import DataTable from '../components/DataTable';
 import Filter from '../components/Filter';
@@ -11,6 +12,18 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { getActionHistory, getActionHistoryNames } from '../services/api';
 
 dayjs.extend(customParseFormat);
+
+const resolveStompBrokerUrl = () => {
+    if (process.env.REACT_APP_STOMP_URL) return process.env.REACT_APP_STOMP_URL;
+    try {
+        const apiBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:12345/smartroom/api';
+        const u = new URL(apiBase);
+        const wsScheme = u.protocol === 'https:' ? 'wss:' : 'ws:';
+        return `${wsScheme}//${u.host}/ws`;
+    } catch {
+        return 'ws://localhost:12345/ws';
+    }
+};
 
 const History = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -45,14 +58,15 @@ const History = () => {
             accessor: 'status',
             render: (row) => {
                 let iconSrc = statusPending;
-                if (row.status === 'ON') iconSrc = statusOn;
-                else if (row.status === 'OFF') iconSrc = statusOff;
+                const status = typeof row.status === 'string' ? row.status : row.status?.toString?.() || '';
+                if (status === 'ON') iconSrc = statusOn;
+                else if (status === 'OFF') iconSrc = statusOff;
 
                 return (
                     <div className="flex justify-center">
                         <img
                             src={iconSrc}
-                            alt={row.status}
+                            alt={status}
                             className="h-[25px] object-contain"
                         />
                     </div>
@@ -60,7 +74,6 @@ const History = () => {
             }
         },
         {
-            header: 'THỜI GIAN',
             accessor: 'time',
             render: (row) => row.time ? dayjs(row.time).format('HH:mm:ss DD/MM/YYYY') : ''
         },
@@ -96,8 +109,8 @@ const History = () => {
     }, [currentPage, itemsPerPage, filterDevice, dateRange, setSearchParams]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
+        const fetchData = async (showLoading = true) => {
+            if (showLoading) setLoading(true);
             try {
                 const params = {
                     page: currentPage - 1,
@@ -123,11 +136,30 @@ const History = () => {
                 setData([]);
                 setTotalItems(0);
             } finally {
-                setLoading(false);
+                if (showLoading) setLoading(false);
             }
         };
 
-        fetchData();
+        fetchData(true);
+
+        // Auto-refresh every 3 seconds to show updated status
+        const interval = setInterval(() => fetchData(false), 3000);
+
+        const client = new Client({
+            brokerURL: resolveStompBrokerUrl(),
+            reconnectDelay: 5000,
+            onConnect: () => {
+                client.subscribe('/topic/device-status', () => {
+                    fetchData(false);
+                });
+            }
+        });
+        client.activate();
+
+        return () => {
+            clearInterval(interval);
+            client.deactivate();
+        };
     }, [currentPage, itemsPerPage, filterDevice, dateRange, sortConfig]);
 
     const handleSearch = () => {

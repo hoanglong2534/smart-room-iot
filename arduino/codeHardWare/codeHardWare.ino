@@ -31,6 +31,7 @@ const unsigned long INTERVAL = 2000;
 int pendingActionPin = -1;
 String pendingActionDeviceId = "";
 String pendingActionStatus = "";
+bool statusSent = false;
 
 void setup_wifi() {
   delay(10);
@@ -108,9 +109,20 @@ void loop() {
   if (pendingActionPin != -1) {
     bool on = (pendingActionStatus == "ON");
     digitalWrite(pendingActionPin, on ? HIGH : LOW);
+    statusSent = false;
+    Serial.println("Action: Device " + pendingActionDeviceId + " -> " + pendingActionStatus);
+  }
+  
+  // Send status update after a small delay to ensure action is processed
+  if (pendingActionPin != -1 && !statusSent) {
     String statusTopic = String(topic_status_prefix) + pendingActionDeviceId;
     String statusPayload = "{\"deviceId\":\"" + pendingActionDeviceId + "\", \"status\":\"" + pendingActionStatus + "\"}";
-    client.publish(statusTopic.c_str(), statusPayload.c_str());
+    if (client.publish(statusTopic.c_str(), statusPayload.c_str())) {
+      Serial.println("Status sent: " + statusTopic + " -> " + statusPayload);
+      statusSent = true;
+    } else {
+      Serial.println("Failed to publish status");
+    }
     pendingActionPin = -1;
   }
 

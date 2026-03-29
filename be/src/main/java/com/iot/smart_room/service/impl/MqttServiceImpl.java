@@ -19,7 +19,13 @@ public class MqttServiceImpl implements MqttService {
         String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
         Object payloadObj = message.getPayload();
         String payload = payloadObj.toString();
-
+        
+        try {
+            java.io.FileWriter fw = new java.io.FileWriter("mqtt_debug.log", true);
+            fw.write("[" + java.time.LocalDateTime.now() + "] RECEIVED: topic=" + topic + ", payload=" + payload + "\n");
+            fw.close();
+        } catch (Exception e) {}
+        
         if ("smartroom/collect-data".equals(topic)) {
             mqttUtils.processSensorData(payload);
         } else if (topic != null && topic.startsWith("smartroom/status/device/")) {
