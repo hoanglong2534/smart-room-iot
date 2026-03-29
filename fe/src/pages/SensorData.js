@@ -28,7 +28,12 @@ const SensorData = () => {
     const initDateRange = () => {
         const from = searchParams.get('from');
         const to = searchParams.get('to');
-        if (from && to) return [dayjs(from, 'HH:mm:ss DD-MM-YYYY'), dayjs(to, 'HH:mm:ss DD-MM-YYYY')];
+        if (from || to) {
+            return [
+                from ? dayjs(from, 'HH:mm:ss DD-MM-YYYY') : null,
+                to ? dayjs(to, 'HH:mm:ss DD-MM-YYYY') : null
+            ];
+        }
         return [dayjs().startOf('month'), dayjs().endOf('month')];
     };
     const [dateRange, setDateRange] = useState(initDateRange());
@@ -94,10 +99,8 @@ const SensorData = () => {
         if (itemsPerPage !== 15) params.set('size', itemsPerPage);
         if (filterSensor !== 'all') params.set('sensor', filterSensor);
         if (filterValue) params.set('value', filterValue);
-        if (dateRange[0] && dateRange[1]) {
-            params.set('from', dateRange[0].format('HH:mm:ss DD-MM-YYYY'));
-            params.set('to', dateRange[1].format('HH:mm:ss DD-MM-YYYY'));
-        }
+        if (dateRange[0]) params.set('from', dateRange[0].format('HH:mm:ss DD-MM-YYYY'));
+        if (dateRange[1]) params.set('to', dateRange[1].format('HH:mm:ss DD-MM-YYYY'));
         setSearchParams(params, { replace: true });
     }, [currentPage, itemsPerPage, filterSensor, filterValue, dateRange, setSearchParams]);
 
@@ -123,10 +126,8 @@ const SensorData = () => {
                     }
                 }
 
-                if (dateRange[0] && dateRange[1]) {
-                    params.from = dateRange[0].format('HH:mm:ss DD-MM-YYYY');
-                    params.to = dateRange[1].format('HH:mm:ss DD-MM-YYYY');
-                }
+                if (dateRange[0]) params.from = dateRange[0].format('HH:mm:ss DD-MM-YYYY');
+                if (dateRange[1]) params.to = dateRange[1].format('HH:mm:ss DD-MM-YYYY');
 
                 const response = await getSensorData(params);
                 setData(response.content || []);

@@ -45,6 +45,14 @@ public class DataSensorSpecification {
                 predicateList.add(
                         criteriaBuilder.between(root.get("createdAt"), request.getFrom(), request.getTo())
                 );
+            } else if (request.getFrom() != null) {
+                predicateList.add(
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), request.getFrom())
+                );
+            } else if (request.getTo() != null) {
+                predicateList.add(
+                        criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), request.getTo())
+                );
             }
 
             return criteriaBuilder.and(predicateList.toArray(new Predicate[0]));

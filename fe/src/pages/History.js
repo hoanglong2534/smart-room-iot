@@ -41,7 +41,12 @@ const History = () => {
     const initDateRange = () => {
         const from = searchParams.get('from');
         const to = searchParams.get('to');
-        if (from && to) return [dayjs(from, 'HH:mm:ss DD-MM-YYYY'), dayjs(to, 'HH:mm:ss DD-MM-YYYY')];
+        if (from || to) {
+            return [
+                from ? dayjs(from, 'HH:mm:ss DD-MM-YYYY') : null,
+                to ? dayjs(to, 'HH:mm:ss DD-MM-YYYY') : null
+            ];
+        }
         return [dayjs().startOf('month'), dayjs().endOf('month')];
     };
     const [dateRange, setDateRange] = useState(initDateRange());
@@ -74,6 +79,7 @@ const History = () => {
             }
         },
         {
+            header: 'THỜI GIAN',
             accessor: 'time',
             render: (row) => row.time ? dayjs(row.time).format('HH:mm:ss DD/MM/YYYY') : ''
         },
@@ -101,10 +107,8 @@ const History = () => {
         if (currentPage !== 1) params.set('page', currentPage);
         if (itemsPerPage !== 15) params.set('size', itemsPerPage);
         if (filterDevice !== 'all') params.set('device', filterDevice);
-        if (dateRange[0] && dateRange[1]) {
-            params.set('from', dateRange[0].format('HH:mm:ss DD-MM-YYYY'));
-            params.set('to', dateRange[1].format('HH:mm:ss DD-MM-YYYY'));
-        }
+        if (dateRange[0]) params.set('from', dateRange[0].format('HH:mm:ss DD-MM-YYYY'));
+        if (dateRange[1]) params.set('to', dateRange[1].format('HH:mm:ss DD-MM-YYYY'));
         setSearchParams(params, { replace: true });
     }, [currentPage, itemsPerPage, filterDevice, dateRange, setSearchParams]);
 
@@ -122,10 +126,8 @@ const History = () => {
                     params.deviceName = filterDevice;
                 }
 
-                if (dateRange[0] && dateRange[1]) {
-                    params.from = dateRange[0].format('HH:mm:ss DD-MM-YYYY');
-                    params.to = dateRange[1].format('HH:mm:ss DD-MM-YYYY');
-                }
+                if (dateRange[0]) params.from = dateRange[0].format('HH:mm:ss DD-MM-YYYY');
+                if (dateRange[1]) params.to = dateRange[1].format('HH:mm:ss DD-MM-YYYY');
 
                 const response = await getActionHistory(params);
                 setData(response.content || []);

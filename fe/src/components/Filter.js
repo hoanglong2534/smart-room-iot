@@ -1,5 +1,10 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
+
+const DISPLAY_FORMAT = 'HH:mm:ss DD/MM/YYYY';
 
 const Filter = ({
     children,
@@ -7,19 +12,51 @@ const Filter = ({
     onDateRangeChange,
     onSearch
 }) => {
-    const fromValue = dateRange?.[0] ? dayjs(dateRange[0]).format('YYYY-MM-DDTHH:mm:ss') : '';
-    const toValue = dateRange?.[1] ? dayjs(dateRange[1]).format('YYYY-MM-DDTHH:mm:ss') : '';
+    const parseFormats = useMemo(() => ['HH:mm:ss DD/MM/YYYY'], []);
+
+    const [fromText, setFromText] = useState('');
+    const [toText, setToText] = useState('');
+
+    useEffect(() => {
+        setFromText(dateRange?.[0] ? dayjs(dateRange[0]).format(DISPLAY_FORMAT) : '');
+        setToText(dateRange?.[1] ? dayjs(dateRange[1]).format(DISPLAY_FORMAT) : '');
+    }, [dateRange]);
+
+    const tryParse = (value) => {
+        const v = (value || '').trim();
+        if (!v) return null;
+        const parsed = dayjs(v, parseFormats, true);
+        return parsed.isValid() ? parsed : null;
+    };
 
     const onFromChange = (e) => {
-        const nextFrom = e.target.value ? dayjs(e.target.value) : null;
+        const value = e.target.value;
+        setFromText(value);
+        const nextFrom = tryParse(value);
         const nextTo = dateRange?.[1] ?? null;
-        onDateRangeChange([nextFrom, nextTo]);
+        if (nextFrom || value.trim() === '') {
+            onDateRangeChange([nextFrom, nextTo]);
+        }
     };
 
     const onToChange = (e) => {
+        const value = e.target.value;
+        setToText(value);
         const nextFrom = dateRange?.[0] ?? null;
-        const nextTo = e.target.value ? dayjs(e.target.value) : null;
-        onDateRangeChange([nextFrom, nextTo]);
+        const nextTo = tryParse(value);
+        if (nextTo || value.trim() === '') {
+            onDateRangeChange([nextFrom, nextTo]);
+        }
+    };
+
+    const onFromBlur = () => {
+        const parsed = tryParse(fromText);
+        if (parsed) setFromText(parsed.format(DISPLAY_FORMAT));
+    };
+
+    const onToBlur = () => {
+        const parsed = tryParse(toText);
+        if (parsed) setToText(parsed.format(DISPLAY_FORMAT));
     };
 
     return (
@@ -31,19 +68,21 @@ const Filter = ({
                     <label className="text-[0.9rem] font-semibold text-[#727681] mb-[0px]">Tìm theo thời gian</label>
                     <div className="flex items-center gap-2">
                         <input
-                            type="datetime-local"
-                            value={fromValue}
+                            type="text"
+                            value={fromText}
                             onChange={onFromChange}
-                            step="1"
-                            className="h-[40px] border border-[#E0E0E0] rounded-[8px] px-[10px] text-[0.9rem] text-[#333] bg-white outline-none focus:border-[#B08955]"
+                            onBlur={onFromBlur}
+                            placeholder="Từ: HH:mm:ss DD/MM/YYYY"
+                            className="h-[40px] w-[240px] border border-[#E0E0E0] rounded-[8px] px-[10px] text-[0.9rem] placeholder:text-[0.82rem] text-[#333] bg-white outline-none focus:border-[#B08955]"
                         />
                         <span className="text-[#727681]">→</span>
                         <input
-                            type="datetime-local"
-                            value={toValue}
+                            type="text"
+                            value={toText}
                             onChange={onToChange}
-                            step="1"
-                            className="h-[40px] border border-[#E0E0E0] rounded-[8px] px-[10px] text-[0.9rem] text-[#333] bg-white outline-none focus:border-[#B08955]"
+                            onBlur={onToBlur}
+                            placeholder="Đến: HH:mm:ss DD/MM/YYYY"
+                            className="h-[40px] w-[240px] border border-[#E0E0E0] rounded-[8px] px-[10px] text-[0.9rem] placeholder:text-[0.82rem] text-[#333] bg-white outline-none focus:border-[#B08955]"
                         />
                     </div>
                 </div>
