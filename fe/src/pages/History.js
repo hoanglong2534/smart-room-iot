@@ -19,9 +19,9 @@ const resolveStompBrokerUrl = () => {
         const apiBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:12345/smartroom/api';
         const u = new URL(apiBase);
         const wsScheme = u.protocol === 'https:' ? 'wss:' : 'ws:';
-        return `${wsScheme}//${u.host}/ws`;
+        return `${wsScheme}//${u.host}/smartroom/ws`;
     } catch {
-        return 'ws://localhost:12345/ws';
+        return 'ws://localhost:12345/smartroom/ws';
     }
 };
 
