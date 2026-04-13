@@ -11,5 +11,6 @@ public interface DeviceMapper {
 
     @Mapping(source = "current_status", target = "currentStatus")
     @Mapping(source = "created_at", target = "createdAt")
+    @Mapping(source = "state", target = "state")
     DeviceResponse toResponse(DeviceEntity entity);
 }

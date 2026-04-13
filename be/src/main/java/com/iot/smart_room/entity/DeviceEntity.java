@@ -25,6 +25,9 @@ public class DeviceEntity {
     @Column(name = "current_status")
     private String current_status;
 
+    @Column(name = "state")
+    private String state;
+
     @Column(name = "created_at",  columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false )
     private LocalDateTime created_at;
 

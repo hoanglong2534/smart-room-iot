@@ -18,6 +18,7 @@ export const toSensorKey = (name = '') => {
     if (normalized.includes('độ ẩm') || normalized.includes('do am') || normalized.includes('humidity')) return 'humidity';
     if (normalized.includes('ánh sáng') || normalized.includes('anh sang') || normalized.includes('light')) return 'light';
     if (normalized.includes('nhiệt độ') || normalized.includes('nhiet do') || normalized.includes('temperature')) return 'temperature';
+    if (normalized.includes('bụi') || normalized.includes('dust')) return 'dust';
     return null;
 };
 
@@ -30,7 +31,7 @@ export const getTrend = (series = []) => {
     const diff = last - prev;
     let percentageText = '';
     if (prev === 0) {
-        percentageText = `${Math.abs(diff).toFixed(1)}°/lx/% so với lần đo trước`;
+        percentageText = `${Math.abs(diff).toFixed(1)} đơn vị so với lần đo trước`;
     } else {
         const percentage = (Math.abs(diff) / prev) * 100;
         percentageText = `${percentage.toFixed(1)}% so với lần đo trước`;
@@ -46,11 +47,12 @@ export const applyRecords = (records, setSeriesData, setSnapshot, setLoadingDevi
         const next = {
             humidity: [...prev.humidity],
             light: [...prev.light],
-            temperature: [...prev.temperature]
+            temperature: [...prev.temperature],
+            dust: [...prev.dust]
         };
 
         let latestTime = null;
-        let latestHumidity = null, latestLight = null, latestTemperature = null;
+        let latestHumidity = null, latestLight = null, latestTemperature = null, latestDust = null;
 
         const sortedRecords = [...records].reverse();
 
@@ -73,13 +75,15 @@ export const applyRecords = (records, setSeriesData, setSnapshot, setLoadingDevi
             if (key === 'humidity') latestHumidity = value;
             if (key === 'light') latestLight = value;
             if (key === 'temperature') latestTemperature = value;
+            if (key === 'dust') latestDust = value;
         });
 
-        if (latestHumidity !== null || latestLight !== null || latestTemperature !== null) {
+        if (latestHumidity !== null || latestLight !== null || latestTemperature !== null || latestDust !== null) {
             setSnapshot(prevSnapshot => ({
                 humidity: latestHumidity ?? prevSnapshot.humidity,
                 light: latestLight ?? prevSnapshot.light,
                 temperature: latestTemperature ?? prevSnapshot.temperature,
+                dust: latestDust ?? prevSnapshot.dust,
                 time: latestTime || prevSnapshot.time
             }));
         }

@@ -28,6 +28,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-secondary);
   color: var(--color-text-title);
+  overflow: hidden;
 }
 
 code {

@@ -15,9 +15,7 @@ public class DataSensorRequest {
     private Long sensorId;
     private Double value;
     @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm:ss dd-MM-yyyy")
-    private LocalDateTime from;
-    @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm:ss dd-MM-yyyy")
-    private LocalDateTime to;
+    private LocalDateTime time;
 
     private Integer page;
     private Integer size;

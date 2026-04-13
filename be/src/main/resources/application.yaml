@@ -13,7 +13,7 @@ server:
   port: 12345
 
 mqtt:
-  broker-url: tcp://localhost:9999
+  broker-url: tcp://10.51.129.155:9999
   client-id: smart-room-backend
   username: longpxh
   password: longpxh@123

@@ -8,19 +8,17 @@ const DISPLAY_FORMAT = 'HH:mm:ss DD/MM/YYYY';
 
 const Filter = ({
     children,
-    dateRange,
-    onDateRangeChange,
+    timeFilter,
+    onTimeFilterChange,
     onSearch
 }) => {
     const parseFormats = useMemo(() => ['HH:mm:ss DD/MM/YYYY'], []);
 
-    const [fromText, setFromText] = useState('');
-    const [toText, setToText] = useState('');
+    const [timeText, setTimeText] = useState('');
 
     useEffect(() => {
-        setFromText(dateRange?.[0] ? dayjs(dateRange[0]).format(DISPLAY_FORMAT) : '');
-        setToText(dateRange?.[1] ? dayjs(dateRange[1]).format(DISPLAY_FORMAT) : '');
-    }, [dateRange]);
+        setTimeText(timeFilter ? dayjs(timeFilter).format(DISPLAY_FORMAT) : '');
+    }, [timeFilter]);
 
     const tryParse = (value) => {
         const v = (value || '').trim();
@@ -29,34 +27,18 @@ const Filter = ({
         return parsed.isValid() ? parsed : null;
     };
 
-    const onFromChange = (e) => {
+    const onTimeChange = (e) => {
         const value = e.target.value;
-        setFromText(value);
-        const nextFrom = tryParse(value);
-        const nextTo = dateRange?.[1] ?? null;
-        if (nextFrom || value.trim() === '') {
-            onDateRangeChange([nextFrom, nextTo]);
+        setTimeText(value);
+        const next = tryParse(value);
+        if (next || value.trim() === '') {
+            onTimeFilterChange(next);
         }
     };
 
-    const onToChange = (e) => {
-        const value = e.target.value;
-        setToText(value);
-        const nextFrom = dateRange?.[0] ?? null;
-        const nextTo = tryParse(value);
-        if (nextTo || value.trim() === '') {
-            onDateRangeChange([nextFrom, nextTo]);
-        }
-    };
-
-    const onFromBlur = () => {
-        const parsed = tryParse(fromText);
-        if (parsed) setFromText(parsed.format(DISPLAY_FORMAT));
-    };
-
-    const onToBlur = () => {
-        const parsed = tryParse(toText);
-        if (parsed) setToText(parsed.format(DISPLAY_FORMAT));
+    const onTimeBlur = () => {
+        const parsed = tryParse(timeText);
+        if (parsed) setTimeText(parsed.format(DISPLAY_FORMAT));
     };
 
     return (
@@ -69,20 +51,11 @@ const Filter = ({
                     <div className="flex items-center gap-2">
                         <input
                             type="text"
-                            value={fromText}
-                            onChange={onFromChange}
-                            onBlur={onFromBlur}
-                            placeholder="Từ: HH:mm:ss DD/MM/YYYY"
-                            className="h-[40px] w-[240px] border border-[#E0E0E0] rounded-[8px] px-[10px] text-[0.9rem] placeholder:text-[0.82rem] text-[#333] bg-white outline-none focus:border-[#B08955]"
-                        />
-                        <span className="text-[#727681]">→</span>
-                        <input
-                            type="text"
-                            value={toText}
-                            onChange={onToChange}
-                            onBlur={onToBlur}
-                            placeholder="Đến: HH:mm:ss DD/MM/YYYY"
-                            className="h-[40px] w-[240px] border border-[#E0E0E0] rounded-[8px] px-[10px] text-[0.9rem] placeholder:text-[0.82rem] text-[#333] bg-white outline-none focus:border-[#B08955]"
+                            value={timeText}
+                            onChange={onTimeChange}
+                            onBlur={onTimeBlur}
+                            placeholder="HH:mm:ss DD/MM/YYYY"
+                            className="h-[40px] w-[320px] border border-[#E0E0E0] rounded-[8px] px-[10px] text-[0.9rem] placeholder:text-[0.82rem] text-[#333] bg-white outline-none focus:border-[#B08955]"
                         />
                     </div>
                 </div>

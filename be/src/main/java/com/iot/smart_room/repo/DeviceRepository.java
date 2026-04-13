@@ -19,7 +19,9 @@ public interface DeviceRepository extends JpaRepository<DeviceEntity, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE DeviceEntity d SET d.current_status = :status WHERE d.id = :id")
+    @Query("UPDATE DeviceEntity d SET d.current_status = :status, d.state = :status WHERE d.id = :id")
     int updateStatus(@Param("id") Long id, @Param("status") String status);
+
+    Optional<DeviceEntity> findByName(String name);
 
 }

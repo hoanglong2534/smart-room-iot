@@ -38,18 +38,20 @@ export const useDashboardData = (applyRecords) => {
     const [devices, setDevices] = useState({
         humidifier: { isOn: false, id: null, isInit: false },
         light: { isOn: false, id: null, isInit: false },
-        fan: { isOn: false, id: null, isInit: false }
+        fan: { isOn: false, id: null, isInit: false },
+        dustWarning: { isOn: false, id: null, isInit: false }
     });
 
     const [loadingDevices, setLoadingDevices] = useState({
         humidifier: false,
         light: false,
-        fan: false
+        fan: false,
+        dustWarning: false
     });
 
     const [isSocketConnected, setIsSocketConnected] = useState(false);
-    const [snapshot, setSnapshot] = useState({ humidity: null, light: null, temperature: null, time: null });
-    const [seriesData, setSeriesData] = useState({ humidity: [], light: [], temperature: [] });
+    const [snapshot, setSnapshot] = useState({ humidity: null, light: null, temperature: null, dust: null, time: null, warning: false });
+    const [seriesData, setSeriesData] = useState({ humidity: [], light: [], temperature: [], dust: [] });
     const [isHardwareOnline, setIsHardwareOnline] = useState(true);
 
     const mountedAtRef = useRef(Date.now());
@@ -58,6 +60,10 @@ export const useDashboardData = (applyRecords) => {
 
     const stompRef = useRef(null);
     const initialFetchDoneRef = useRef(false);
+    const lastManualClickRef = useRef({}); // { deviceKey: timestamp }
+    const recordManualClick = useCallback((deviceKey) => {
+        lastManualClickRef.current = { ...lastManualClickRef.current, [deviceKey]: Date.now() };
+    }, []);
 
     const markHardwareAlive = useCallback(() => {
         lastEvidenceMsRef.current = Date.now();
@@ -125,12 +131,12 @@ export const useDashboardData = (applyRecords) => {
                         if (nameLower.includes('hút ẩm') || nameLower.includes('humidifier')) key = 'humidifier';
                         if (nameLower.includes('đèn') || nameLower.includes('light')) key = 'light';
                         if (nameLower.includes('quạt') || nameLower.includes('fan')) key = 'fan';
+                        if (nameLower.includes('cảnh báo') || nameLower.includes('dust warning')) key = 'dustWarning';
 
                         if (key) {
-                            const newIsOn = serverDevice.currentStatus === 'ON' || serverDevice.currentStatus === '1';
-                            if (prev[key] && prev[key].isOn !== newIsOn) {
-                                setLoadingDevices((loadStates) => ({ ...loadStates, [key]: false }));
-                            }
+                            const effectiveState = serverDevice.state || serverDevice.currentStatus;
+                            const newIsOn = effectiveState === 'ON' || effectiveState === '1';
+                            setLoadingDevices((loadStates) => ({ ...loadStates, [key]: false }));
                             next[key] = { isOn: newIsOn, id: serverDevice.id, isInit: true };
                         }
                     });
@@ -141,6 +147,12 @@ export const useDashboardData = (applyRecords) => {
             console.error('Error fetching devices', error);
         }
     }, []);
+
+    useEffect(() => {
+        if (!devices.fan.isInit) return;
+
+
+    }, [snapshot, devices, loadingDevices]);
 
     useEffect(() => {
         if (initialFetchDoneRef.current) return;
@@ -183,7 +195,7 @@ export const useDashboardData = (applyRecords) => {
                         let keyToClear = null;
                         setDevices((prev) => {
                             const next = { ...prev };
-                            for (const key of ['humidifier', 'light', 'fan']) {
+                            for (const key of ['humidifier', 'light', 'fan', 'dustWarning']) {
                                 if (prev[key]?.id === id) {
                                     next[key] = { ...prev[key], isOn, isInit: true };
                                     keyToClear = key;
@@ -234,6 +246,7 @@ export const useDashboardData = (applyRecords) => {
         seriesData,
         setDevices,
         setLoadingDevices,
+        recordManualClick,
         isHardwareOnline
     };
 };

@@ -23,7 +23,7 @@ public class SensorEntity {
     private String name;
 
     @Column(name = "created_at",  columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false )
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "sensor", cascade = CascadeType.ALL)
     private List<DataSensorEntity> dataSensors;

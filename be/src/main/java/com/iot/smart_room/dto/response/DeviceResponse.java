@@ -13,5 +13,6 @@ public class DeviceResponse {
     private Long id;
     private String name;
     private String currentStatus;
+    private String state;
     private LocalDateTime createdAt;
 }

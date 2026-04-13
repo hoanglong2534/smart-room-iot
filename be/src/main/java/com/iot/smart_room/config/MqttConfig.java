@@ -23,8 +23,7 @@ public class MqttConfig {
     @Value("${mqtt.broker-url}")
     private String brokerUrl;
 
-    @Value("${mqtt.client-id}")
-    private String clientId;
+    private final String clientId = "backend-" + (System.currentTimeMillis() % 10000);
 
     @Value("${mqtt.topic.sensor}")
     private String sensorTopic;

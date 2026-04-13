@@ -29,11 +29,6 @@ public class DataSensorSpecification {
                 );
             }
 
-            if(request.getName() != null && !request.getName().isBlank()){
-                predicateList.add(
-                        criteriaBuilder.equal(root.get("sensor").get("name"), request.getName())
-                );
-            }
 
             if(request.getValue() != null){
                 predicateList.add(
@@ -41,17 +36,9 @@ public class DataSensorSpecification {
                 );
             }
 
-            if(request.getFrom() != null && request.getTo() != null){
+            if (request.getTime() != null) {
                 predicateList.add(
-                        criteriaBuilder.between(root.get("createdAt"), request.getFrom(), request.getTo())
-                );
-            } else if (request.getFrom() != null) {
-                predicateList.add(
-                        criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), request.getFrom())
-                );
-            } else if (request.getTo() != null) {
-                predicateList.add(
-                        criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), request.getTo())
+                        criteriaBuilder.equal(root.get("createdAt"), request.getTime())
                 );
             }
 

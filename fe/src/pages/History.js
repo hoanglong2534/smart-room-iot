@@ -35,24 +35,26 @@ const History = () => {
     const [itemsPerPage, setItemsPerPage] = useState(parseInt(searchParams.get('size')) || 15);
     const [loading, setLoading] = useState(false);
     const [deviceNames, setDeviceNames] = useState([]);
+    const [actionOptions, setActionOptions] = useState([]);
+    const [statusOptions, setStatusOptions] = useState([]);
+
+    const ACTION_LABELS = { ON: 'ON', OFF: 'OFF' };
+    const STATUS_LABELS = { ON: 'Đã bật', OFF: 'Đã tắt', PENDING: 'Đang xử lý' };
 
     const [filterDevice, setFilterDevice] = useState(initialDeviceFilter);
+    const [filterAction, setFilterAction] = useState(searchParams.get('action') || 'all');
+    const [filterStatus, setFilterStatus] = useState(searchParams.get('status') || 'all');
 
-    const initDateRange = () => {
-        const from = searchParams.get('from');
-        const to = searchParams.get('to');
-        if (from || to) {
-            return [
-                from ? dayjs(from, 'HH:mm:ss DD-MM-YYYY') : null,
-                to ? dayjs(to, 'HH:mm:ss DD-MM-YYYY') : null
-            ];
-        }
-        return [dayjs().startOf('month'), dayjs().endOf('month')];
+    const initTime = () => {
+        const time = searchParams.get('time');
+        return time ? dayjs(time, 'HH:mm:ss DD-MM-YYYY') : null;
     };
-    const [dateRange, setDateRange] = useState(initDateRange());
+    const [timeFilter, setTimeFilter] = useState(initTime());
 
     const [tempFilterDevice, setTempFilterDevice] = useState(initialDeviceFilter);
-    const [tempDateRange, setTempDateRange] = useState(initDateRange());
+    const [tempFilterAction, setTempFilterAction] = useState(searchParams.get('action') || 'all');
+    const [tempFilterStatus, setTempFilterStatus] = useState(searchParams.get('status') || 'all');
+    const [tempTimeFilter, setTempTimeFilter] = useState(initTime());
 
     const columns = [
         { header: 'ID', accessor: 'id' },
@@ -107,10 +109,11 @@ const History = () => {
         if (currentPage !== 1) params.set('page', currentPage);
         if (itemsPerPage !== 15) params.set('size', itemsPerPage);
         if (filterDevice !== 'all') params.set('device', filterDevice);
-        if (dateRange[0]) params.set('from', dateRange[0].format('HH:mm:ss DD-MM-YYYY'));
-        if (dateRange[1]) params.set('to', dateRange[1].format('HH:mm:ss DD-MM-YYYY'));
+        if (filterAction !== 'all') params.set('action', filterAction);
+        if (filterStatus !== 'all') params.set('status', filterStatus);
+        if (timeFilter) params.set('time', timeFilter.format('HH:mm:ss DD-MM-YYYY'));
         setSearchParams(params, { replace: true });
-    }, [currentPage, itemsPerPage, filterDevice, dateRange, setSearchParams]);
+    }, [currentPage, itemsPerPage, filterDevice, filterAction, filterStatus, timeFilter, setSearchParams]);
 
     useEffect(() => {
         const fetchData = async (showLoading = true) => {
@@ -125,12 +128,23 @@ const History = () => {
                 if (filterDevice !== 'all') {
                     params.deviceName = filterDevice;
                 }
+                if (filterAction !== 'all') {
+                    params.action = filterAction;
+                }
+                if (filterStatus !== 'all') {
+                    params.status = filterStatus;
+                }
 
-                if (dateRange[0]) params.from = dateRange[0].format('HH:mm:ss DD-MM-YYYY');
-                if (dateRange[1]) params.to = dateRange[1].format('HH:mm:ss DD-MM-YYYY');
+                if (timeFilter) params.time = timeFilter.format('HH:mm:ss DD-MM-YYYY');
 
                 const response = await getActionHistory(params);
-                setData(response.content || []);
+                const content = response.content || [];
+                setData(content);
+                // derive unique action/status values to populate dropdown labels
+                const uniqueActions = Array.from(new Set(content.map(r => r.action).filter(Boolean)));
+                const uniqueStatuses = Array.from(new Set(content.map(r => (typeof r.status === 'string' ? r.status : r.status?.toString?.())).filter(Boolean)));
+                setActionOptions(uniqueActions);
+                setStatusOptions(uniqueStatuses);
                 const total = response.page ? response.page.totalElements : (response.totalElements || 0);
                 setTotalItems(total);
             } catch (error) {
@@ -160,13 +174,17 @@ const History = () => {
 
         return () => {
             clearInterval(interval);
-            client.deactivate();
+            if (client.active) {
+                client.deactivate();
+            }
         };
-    }, [currentPage, itemsPerPage, filterDevice, dateRange, sortConfig]);
+    }, [currentPage, itemsPerPage, filterDevice, filterAction, filterStatus, timeFilter, sortConfig]);
 
     const handleSearch = () => {
         setFilterDevice(tempFilterDevice);
-        setDateRange(tempDateRange);
+        setFilterAction(tempFilterAction);
+        setFilterStatus(tempFilterStatus);
+        setTimeFilter(tempTimeFilter);
         setCurrentPage(1);
     };
 
@@ -192,8 +210,8 @@ const History = () => {
 
                     <div className="bg-white rounded-[15px] p-[25px] flex flex-col shadow-sm relative">
                         <Filter
-                            dateRange={tempDateRange}
-                            onDateRangeChange={setTempDateRange}
+                            timeFilter={tempTimeFilter}
+                            onTimeFilterChange={setTempTimeFilter}
                             onSearch={handleSearch}
                         >
                             <div className="flex flex-col gap-[5px]">
@@ -209,6 +227,43 @@ const History = () => {
                                             {name}
                                         </option>
                                     ))}
+                                </select>
+                            </div>
+                                            <div className="flex flex-col gap-[5px]">
+                                                    <label className="text-[0.9rem] font-semibold text-[#727681]">Tìm theo hành động</label>
+                                                    <select
+                                                        className="h-[40px] border border-[#E0E0E0] rounded-[8px] px-[15px] text-[0.9rem] text-[#333] bg-white outline-none focus:border-[#B08955] min-w-[200px]"
+                                                        value={tempFilterAction}
+                                                        onChange={(e) => setTempFilterAction(e.target.value)}
+                                                    >
+                                                        <option value="all">Tất cả</option>
+                                                        {actionOptions.length ? actionOptions.map((a, i) => (
+                                                            <option key={`action-${i}-${a}`} value={a}>{a}</option>
+                                                        )) : (
+                                                            <>
+                                                                <option value="ON">ON</option>
+                                                                <option value="OFF">OFF</option>
+                                                            </>
+                                                        )}
+                                                    </select>
+                                                </div>
+                            <div className="flex flex-col gap-[5px]">
+                                <label className="text-[0.9rem] font-semibold text-[#727681]">Tìm theo trạng thái</label>
+                                <select
+                                    className="h-[40px] border border-[#E0E0E0] rounded-[8px] px-[15px] text-[0.9rem] text-[#333] bg-white outline-none focus:border-[#B08955] min-w-[200px]"
+                                    value={tempFilterStatus}
+                                    onChange={(e) => setTempFilterStatus(e.target.value)}
+                                >
+                                    <option value="all">Tất cả</option>
+                                    {statusOptions.length ? statusOptions.map((s, i) => (
+                                        <option key={`status-${i}-${s}`} value={s}>{STATUS_LABELS[s?.toUpperCase?.() ?? s] || s}</option>
+                                    )) : (
+                                        <>
+                                            <option value="ON">{STATUS_LABELS.ON}</option>
+                                            <option value="OFF">{STATUS_LABELS.OFF}</option>
+                                            <option value="PENDING">{STATUS_LABELS.PENDING}</option>
+                                        </>
+                                    )}
                                 </select>
                             </div>
                         </Filter>

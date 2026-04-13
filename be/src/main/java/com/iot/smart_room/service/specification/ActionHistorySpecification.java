@@ -12,34 +12,36 @@ import java.util.List;
 @Service
 public class ActionHistorySpecification {
 
-    public Specification<ActionHistoryEntity> search(ActionHistoryRequest request){
+    public Specification<ActionHistoryEntity> search(ActionHistoryRequest request) {
         return (root, query, criteriaBuilder) -> {
 
             List<Predicate> predicateList = new ArrayList<>();
 
-            if(request.getDeviceId() != null && !request.getDeviceId().isBlank()){
+            if (request.getDeviceId() != null && !request.getDeviceId().isBlank()) {
                 predicateList.add(
-                        criteriaBuilder.equal(root.get("device").get("id"), request.getDeviceId())
-                );
+                        criteriaBuilder.equal(root.get("device").get("id"), request.getDeviceId()));
             }
 
-            if(request.getDeviceName() != null && !request.getDeviceName().isBlank()){
+            if (request.getDeviceName() != null && !request.getDeviceName().isBlank()) {
                 predicateList.add(
-                        criteriaBuilder.equal(root.get("device").get("name"), request.getDeviceName())
-                );
+                        criteriaBuilder.equal(root.get("device").get("name"), request.getDeviceName()));
             }
 
-            if(request.getFrom() != null && request.getTo() != null){
+            if (request.getAction() != null && !request.getAction().isBlank()) {
                 predicateList.add(
-                        criteriaBuilder.between(root.get("createdAt"), request.getFrom(), request.getTo())
-                );
-            } else if (request.getFrom() != null) {
+                        criteriaBuilder.equal(root.get("action"),
+                                com.iot.smart_room.enums.ActionEnum.valueOf(request.getAction())));
+            }
+
+            if (request.getStatus() != null && !request.getStatus().isBlank()) {
                 predicateList.add(
-                        criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), request.getFrom())
-                );
-            } else if (request.getTo() != null) {
+                        criteriaBuilder.equal(root.get("status"),
+                                com.iot.smart_room.enums.StatusEnum.valueOf(request.getStatus())));
+            }
+
+            if (request.getTime() != null) {
                 predicateList.add(
-                        criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), request.getTo())
+                        criteriaBuilder.equal(root.get("createdAt"), request.getTime())
                 );
             }
 

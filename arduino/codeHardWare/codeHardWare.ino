@@ -5,7 +5,7 @@
 
 const char* ssid = "MyWifi";
 const char* password = "iot@12345";
-const char* mqtt_server = "10.41.243.155";
+const char* mqtt_server = "10.51.129.155";
 const int mqtt_port = 9999;
 const char* mqtt_user = "longpxh";
 const char* mqtt_pass = "longpxh@123";
@@ -20,6 +20,7 @@ const char* topic_status_prefix = "smartroom/status/device/";
 #define LED_BLUE    33
 #define LED_ORANGE  27
 #define LDR_PIN     34
+#define LED_DUST_WARNING 25
 
 DHT dht(DHTPIN, DHTTYPE);
 WiFiClient espClient;
@@ -73,10 +74,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 void reconnect() {
   while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
     String clientId = "ESP32Client-" + String(random(0xffff), HEX);
     if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+      Serial.println("connected");
       client.subscribe(topic_control);
     } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
       delay(5000);
     }
   }
@@ -88,9 +94,11 @@ void setup() {
   pinMode(LED_RED, OUTPUT);
   pinMode(LED_BLUE, OUTPUT);
   pinMode(LED_ORANGE, OUTPUT);
+  pinMode(LED_DUST_WARNING, OUTPUT);
   digitalWrite(LED_RED, LOW);
   digitalWrite(LED_BLUE, LOW);
   digitalWrite(LED_ORANGE, LOW);
+  digitalWrite(LED_DUST_WARNING, LOW);
 
   dht.begin();
   setup_wifi();
@@ -135,12 +143,23 @@ void loop() {
   float humi = dht.readHumidity();
 
   if (!isnan(temp) && !isnan(humi)) {
-    Serial.printf("%.1fC %.1f%% LDR:%d\n", temp, humi, lightValue);
+    int dustValue = random(0, 301); // Random dust 0-300
+    
+    if (dustValue > 100) {
+      digitalWrite(LED_DUST_WARNING, HIGH);
+    } else {
+      digitalWrite(LED_DUST_WARNING, LOW);
+    }
+
+    Serial.printf("%.1f[C] %.1f[%%] LDR:%d DUST:%d\n", temp, humi, lightValue, dustValue);
     String payload = "{";
     payload += "\"temperature\":" + String(temp, 1) + ",";
     payload += "\"humidity\":" + String(humi, 1) + ",";
-    payload += "\"light\":" + String(lightValue);
+    payload += "\"light\":" + String(lightValue) + ",";
+    payload += "\"dust\":" + String(dustValue);
     payload += "}";
     client.publish(topic_data, payload.c_str());
+  } else {
+    Serial.println("Failed to read from DHT sensor!");
   }
 }

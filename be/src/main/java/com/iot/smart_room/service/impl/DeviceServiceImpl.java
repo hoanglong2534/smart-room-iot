@@ -94,11 +94,13 @@ public class DeviceServiceImpl implements DeviceService {
                 }
             });
 
-            // Giữ DB đồng bộ với lệnh gửi đi để GET /device trả đúng trạng thái (MQTT status có thể tới trễ hoặc lệch broker)
+
             device.setCurrent_status(action);
+            device.setState(action);
             deviceRepository.save(device);
 
             mqttGateway.sendToMqtt("smartroom/control/device/" + deviceId, "{\"deviceId\":\"" + deviceId + "\", \"action\":\"" + action + "\"}");
+            com.iot.smart_room.utils.MqttUtils.markManualAction(deviceId);
         }
     }
 

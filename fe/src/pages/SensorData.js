@@ -25,23 +25,16 @@ const SensorData = () => {
     const [filterSensor, setFilterSensor] = useState(initialSensorFilter);
     const [filterValue, setFilterValue] = useState(searchParams.get('value') || '');
 
-    const initDateRange = () => {
-        const from = searchParams.get('from');
-        const to = searchParams.get('to');
-        if (from || to) {
-            return [
-                from ? dayjs(from, 'HH:mm:ss DD-MM-YYYY') : null,
-                to ? dayjs(to, 'HH:mm:ss DD-MM-YYYY') : null
-            ];
-        }
-        return [dayjs().startOf('month'), dayjs().endOf('month')];
+    const initTime = () => {
+        const time = searchParams.get('time');
+        return time ? dayjs(time, 'HH:mm:ss DD-MM-YYYY') : null;
     };
-    const [dateRange, setDateRange] = useState(initDateRange());
+    const [timeFilter, setTimeFilter] = useState(initTime());
 
     // Temporary State (UI)
     const [tempFilterSensor, setTempFilterSensor] = useState(initialSensorFilter);
     const [tempFilterValue, setTempFilterValue] = useState(searchParams.get('value') || '');
-    const [tempDateRange, setTempDateRange] = useState(initDateRange());
+    const [tempTimeFilter, setTempTimeFilter] = useState(initTime());
 
     const getSensorOption = (sensor, index) => {
         if (typeof sensor === 'string') {
@@ -71,7 +64,19 @@ const SensorData = () => {
             accessor: 'name',
             render: (row) => <span className="font-medium">{row.name || ''}</span>
         },
-        { header: 'GIÁ TRỊ CẢM BIẾN', accessor: 'value', render: (row) => <span className="font-bold text-[#333]">{row.value}</span> },
+        { 
+            header: 'GIÁ TRỊ CẢM BIẾN', 
+            accessor: 'value', 
+            render: (row) => {
+                const name = row.name || '';
+                let unit = '';
+                if (name.includes('nhiệt độ')) unit = '°C';
+                if (name.includes('độ ẩm')) unit = '%';
+                if (name.includes('ánh sáng')) unit = 'lx';
+                if (name.includes('bụi')) unit = ' µg/m³';
+                return <span className="font-bold text-[#333]">{row.value}{unit}</span>;
+            }
+        },
         {
             header: 'THỜI GIAN',
             accessor: 'time',
@@ -99,10 +104,9 @@ const SensorData = () => {
         if (itemsPerPage !== 15) params.set('size', itemsPerPage);
         if (filterSensor !== 'all') params.set('sensor', filterSensor);
         if (filterValue) params.set('value', filterValue);
-        if (dateRange[0]) params.set('from', dateRange[0].format('HH:mm:ss DD-MM-YYYY'));
-        if (dateRange[1]) params.set('to', dateRange[1].format('HH:mm:ss DD-MM-YYYY'));
+        if (timeFilter) params.set('time', timeFilter.format('HH:mm:ss DD-MM-YYYY'));
         setSearchParams(params, { replace: true });
-    }, [currentPage, itemsPerPage, filterSensor, filterValue, dateRange, setSearchParams]);
+    }, [currentPage, itemsPerPage, filterSensor, filterValue, timeFilter, setSearchParams]);
 
     // Fetch Data
     useEffect(() => {
@@ -120,14 +124,13 @@ const SensorData = () => {
                 }
 
                 if (filterValue) {
-                    const parsedValue = parseInt(filterValue);
+                    const parsedValue = parseFloat(filterValue);
                     if (!isNaN(parsedValue)) {
                         params.value = parsedValue;
                     }
                 }
 
-                if (dateRange[0]) params.from = dateRange[0].format('HH:mm:ss DD-MM-YYYY');
-                if (dateRange[1]) params.to = dateRange[1].format('HH:mm:ss DD-MM-YYYY');
+                if (timeFilter) params.time = timeFilter.format('HH:mm:ss DD-MM-YYYY');
 
                 const response = await getSensorData(params);
                 setData(response.content || []);
@@ -143,12 +146,12 @@ const SensorData = () => {
         };
 
         fetchData();
-    }, [currentPage, itemsPerPage, filterSensor, filterValue, dateRange, sortConfig]);
+    }, [currentPage, itemsPerPage, filterSensor, filterValue, timeFilter, sortConfig]);
 
     const handleSearch = () => {
         setFilterSensor(tempFilterSensor);
         setFilterValue(tempFilterValue);
-        setDateRange(tempDateRange);
+        setTimeFilter(tempTimeFilter);
         setCurrentPage(1);
     };
 
@@ -174,8 +177,8 @@ const SensorData = () => {
 
                     <div className="bg-white rounded-[15px] p-[25px] flex flex-col shadow-sm relative">
                         <Filter
-                            dateRange={tempDateRange}
-                            onDateRangeChange={setTempDateRange}
+                            timeFilter={tempTimeFilter}
+                            onTimeFilterChange={setTempTimeFilter}
                             onSearch={handleSearch}
                         >
                             <div className="flex flex-col gap-[5px]">
